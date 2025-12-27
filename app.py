@@ -122,7 +122,7 @@ def analyze_rpu(rpu_file):
         return None
 
 def get_video_resolution(video_file):
-    """Get video resolution using ffprobe"""
+    """Get video resolution using ffprobe and return friendly name"""
     try:
         cmd = [
             'ffprobe', '-v', 'error',
@@ -138,7 +138,29 @@ def get_video_resolution(video_file):
                 stream = data['streams'][0]
                 width = stream.get('width', 0)
                 height = stream.get('height', 0)
-                return f"{width}x{height}"
+                
+                # Map resolution to friendly names
+                if width == 3840 and height == 2160:
+                    return "4K (UHD)"
+                elif width == 1920 and height == 1080:
+                    return "Full HD (1080p)"
+                elif width == 1280 and height == 720:
+                    return "HD (720p)"
+                elif width == 7680 and height == 4320:
+                    return "8K (UHD)"
+                elif width == 2560 and height == 1440:
+                    return "QHD (1440p)"
+                elif width == 4096 and height == 2160:
+                    return "4K DCI"
+                elif width == 1366 and height == 768:
+                    return "HD (768p)"
+                elif width == 854 and height == 480:
+                    return "SD (480p)"
+                elif width == 640 and height == 480:
+                    return "SD (480p)"
+                else:
+                    # For non-standard resolutions, show both friendly and actual
+                    return f"{width}x{height}"
     except Exception as e:
         print(f"Error getting resolution: {e}")
     return "Unknown"
