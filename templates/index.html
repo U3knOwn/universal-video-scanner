@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal HDR Video Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Universal HDR Video Scanner</h1>
+            <p class="subtitle">SDR • HDR10 • HDR10+ • HLG • Dolby Vision (alle Profile)</p>
+        </header>
+        
+        <div class="controls">
+            <div class="stats">
+                Gescannte Medien: <strong id="fileCount">{{ file_count }}</strong>
+            </div>
+            <div class="button-group">
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <span>Scanne Dateien...</span>
+                </div>
+                <button id="scanButton" onclick="startManualScan()">
+                    🔍 Alle nicht gescannten Medien scannen
+                </button>
+            </div>
+        </div>
+        
+        <div class="controls" style="margin-top: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label for="fileSelect" style="color: #a0a0a0;">Einzelne Datei scannen:</label>
+                <select id="fileSelect">
+                    <option value="">-- Datei auswählen --</option>
+                </select>
+                <button id="scanFileButton" onclick="scanSelectedFile()" disabled>
+                    ▶️ Ausgewählte Datei scannen
+                </button>
+            </div>
+        </div>
+        
+        <div id="message" class="message"></div>
+        
+        {% if files %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Dateiname</th>
+                    <th>HDR Format</th>
+                    <th>Auflösung</th>
+                    <th>Audio Codec</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td data-label="Dateiname" title="{{ file.path }}">{{ file.filename }}</td>
+                    <td data-label="HDR Format">
+                        <span class="hdr-badge hdr-{{ file.hdr_format.lower().replace(' ', '-').replace('+', 'plus') }}">
+                            {{ file.hdr_detail }}
+                        </span>
+                        {% if file.el_type %}
+                        <span class="el-badge el-{{ file.el_type.lower() }}">
+                            {{ file.el_type }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Auflösung" class="resolution">{{ file.resolution }}</td>
+                    <td data-label="Audio Codec" class="audio-codec">{{ file.audio_codec }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <h2>Keine Dolby Vision Profile 7 Medien gefunden</h2>
+            <p>Legen Sie Mediendateien im /media Verzeichnis ab oder klicken Sie auf "Nicht gescannte Medien scannen"</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        // Pass AUTO_REFRESH_INTERVAL from Flask to JavaScript
+        window.AUTO_REFRESH_INTERVAL = {{ auto_refresh_interval }};
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #4ecca3;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+    color: #a0a0a0;
+    font-size: 1.1em;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.stats {
+    color: #a0a0a0;
+}
+
+.stats strong {
+    color: #4ecca3;
+    font-size: 1.2em;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#scanButton, #scanFileButton {
+    background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
+    color: #1e1e2e;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(78, 204, 163, 0.3);
+}
+
+#scanButton:hover:not(:disabled), #scanFileButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(78, 204, 163, 0.4);
+}
+
+#scanButton:disabled, #scanFileButton:disabled {
+    background: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#fileSelect {
+    background: rgba(0, 0, 0, 0.3);
+    color: #e0e0e0;
+    border: 2px solid #4ecca3;
+    padding: 10px 15px;
+    font-size: 1em;
+    border-radius: 10px;
+    cursor: pointer;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+#fileSelect option {
+    background: #2d2d44;
+    color: #e0e0e0;
+}
+
+.loading {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: #4ecca3;
+}
+
+.loading.active {
+    display: flex;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(78, 204, 163, 0.3);
+    border-top-color: #4ecca3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.message {
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin: 10px 0;
+    display: none;
+}
+
+.message.success {
+    background: rgba(78, 204, 163, 0.2);
+    border: 1px solid #4ecca3;
+    color: #4ecca3;
+}
+
+.message.info {
+    background: rgba(100, 149, 237, 0.2);
+    border: 1px solid #6495ED;
+    color: #6495ED;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+thead {
+    background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
+    color: #1e1e2e;
+}
+
+th {
+    padding: 15px;
+    text-align: left;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tbody tr {
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: rgba(78, 204, 163, 0.1);
+}
+
+.hdr-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.hdr-dolby-vision {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+}
+
+.hdr-hdr10plus {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.hdr-hdr10 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.hdr-hlg {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.hdr-sdr {
+    background: #555;
+    color: #e0e0e0;
+}
+
+.hdr-unknown {
+    background: #444;
+    color: #999;
+}
+
+.el-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.el-mel {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.el-fel {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.resolution {
+    color: #4ecca3;
+    font-weight: bold;
+}
+
+.audio-codec {
+    color: #e0e0e0;
+    font-size: 0.9em;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #a0a0a0;
+}
+
+.empty-state h2 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+/* Mobile responsive styles for screens under 768px */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .stats {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .button-group {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    #scanButton, #scanFileButton {
+        width: 100%;
+        padding: 15px;
+    }
+    
+    #fileSelect {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Hide table headers on mobile */
+    thead {
+        display: none;
+    }
+    
+    /* Display table as cards on mobile */
+    table {
+        border: none;
+        background: transparent;
+    }
+    
+    tbody {
+        display: block;
+    }
+    
+    tr {
+        display: block;
+        margin-bottom: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        border-left: 4px solid #4ecca3;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    tr:hover {
+        background: rgba(78, 204, 163, 0.1);
+    }
+    
+    td {
+        display: block;
+        text-align: left;
+        padding: 10px 0;
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 45%;
+        padding-right: 10px;
+        font-weight: bold;
+        color: #4ecca3;
+        text-transform: uppercase;
+        font-size: 0.85em;
+    }
+    
+    td:first-child {
+        padding-top: 0;
+    }
+    
+    td:last-child {
+        padding-bottom: 0;
+    }
+}

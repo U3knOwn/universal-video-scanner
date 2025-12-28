@@ -5,18 +5,35 @@ import subprocess
 import tempfile
 import threading
 import time
+import urllib.request
 from pathlib import Path
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template, jsonify, request
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-
-app = Flask(__name__)
 
 # Configuration
 MEDIA_PATH = os.environ.get('MEDIA_PATH', '/media')
 DATA_DIR = '/app/data'
 TEMP_DIR = '/app/temp'
 DB_FILE = os.path.join(DATA_DIR, 'scanned_files.json')
+
+# Static files configuration
+TEMPLATES_DIR = os.path.join(DATA_DIR, 'templates')
+STATIC_DIR = os.path.join(DATA_DIR, 'static')
+CSS_DIR = os.path.join(STATIC_DIR, 'css')
+JS_DIR = os.path.join(STATIC_DIR, 'js')
+
+# GitHub raw URLs for downloading static files
+GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/dovi-detector/main'
+GITHUB_FILES = {
+    'templates/index.html': os.path.join(TEMPLATES_DIR, 'index.html'),
+    'static/css/style.css': os.path.join(CSS_DIR, 'style.css'),
+    'static/js/main.js': os.path.join(JS_DIR, 'main.js'),
+}
+
+app = Flask(__name__, 
+            template_folder=TEMPLATES_DIR,
+            static_folder=STATIC_DIR)
 
 # Scanner configuration constants
 FILE_WRITE_DELAY = int(os.environ.get('FILE_WRITE_DELAY', '5'))
@@ -33,6 +50,73 @@ scan_lock = threading.Lock()
 # Ensure directories exist
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
+os.makedirs(TEMPLATES_DIR, exist_ok=True)
+os.makedirs(CSS_DIR, exist_ok=True)
+os.makedirs(JS_DIR, exist_ok=True)
+
+def download_static_files():
+    """Download missing static files from GitHub"""
+    missing_files = []
+    
+    # Check which files are missing
+    for github_path, local_path in GITHUB_FILES.items():
+        if not os.path.exists(local_path):
+            missing_files.append((github_path, local_path))
+    
+    if not missing_files:
+        print("✓ All static files present")
+        return True
+    
+    print(f"Downloading {len(missing_files)} missing file(s) from GitHub...")
+    
+    for github_path, local_path in missing_files:
+        try:
+            url = f"{GITHUB_RAW_BASE}/{github_path}"
+            print(f"  Downloading: {github_path}")
+            
+            # Download file
+            with urllib.request.urlopen(url) as response:
+                content = response.read()
+            
+            # Save file
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            with open(local_path, 'wb') as f:
+                f.write(content)
+            
+            print(f"  ✓ Saved: {local_path}")
+        except Exception as e:
+            print(f"  ✗ Error downloading {github_path}: {e}")
+            return False
+    
+    print("✓ All static files downloaded successfully")
+    return True
+
+def update_static_files():
+    """Force update all static files from GitHub"""
+    print("Updating all static files from GitHub...")
+    
+    for github_path, local_path in GITHUB_FILES.items():
+        try:
+            url = f"{GITHUB_RAW_BASE}/{github_path}"
+            print(f"  Updating: {github_path}")
+            
+            # Download file
+            with urllib.request.urlopen(url) as response:
+                content = response.read()
+            
+            # Save file
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            with open(local_path, 'wb') as f:
+                f.write(content)
+            
+            print(f"  ✓ Updated: {local_path}")
+        except Exception as e:
+            print(f"  ✗ Error updating {github_path}: {e}")
+            return False
+    
+    print("✓ All static files updated successfully")
+    return True
+
 
 def cleanup_temp_directory():
     """Clean up temporary directory to prevent accumulation of orphaned files"""
@@ -540,542 +624,6 @@ def start_file_observer():
     print(f"File observer started for: {MEDIA_PATH}")
     return observer
 
-# HTML Template
-HTML_TEMPLATE = '''
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal HDR Video Scanner</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        h1 {
-            font-size: 2.5em;
-            color: #4ecca3;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        
-        .subtitle {
-            color: #a0a0a0;
-            font-size: 1.1em;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-        
-        .stats {
-            color: #a0a0a0;
-        }
-        
-        .stats strong {
-            color: #4ecca3;
-            font-size: 1.2em;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        #scanButton, #scanFileButton {
-            background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
-            color: #1e1e2e;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1em;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(78, 204, 163, 0.3);
-        }
-        
-        #scanButton:hover:not(:disabled), #scanFileButton:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(78, 204, 163, 0.4);
-        }
-        
-        #scanButton:disabled, #scanFileButton:disabled {
-            background: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        
-        #fileSelect {
-            background: rgba(0, 0, 0, 0.3);
-            color: #e0e0e0;
-            border: 2px solid #4ecca3;
-            padding: 10px 15px;
-            font-size: 1em;
-            border-radius: 10px;
-            cursor: pointer;
-            min-width: 300px;
-            max-width: 500px;
-        }
-        
-        #fileSelect option {
-            background: #2d2d44;
-            color: #e0e0e0;
-        }
-        
-        .loading {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            color: #4ecca3;
-        }
-        
-        .loading.active {
-            display: flex;
-        }
-        
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(78, 204, 163, 0.3);
-            border-top-color: #4ecca3;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .message {
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .message.success {
-            background: rgba(78, 204, 163, 0.2);
-            border: 1px solid #4ecca3;
-            color: #4ecca3;
-        }
-        
-        .message.info {
-            background: rgba(100, 149, 237, 0.2);
-            border: 1px solid #6495ED;
-            color: #6495ED;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        thead {
-            background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
-            color: #1e1e2e;
-        }
-        
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.9em;
-            letter-spacing: 1px;
-        }
-        
-        td {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        tbody tr {
-            transition: background 0.2s ease;
-        }
-        
-        tbody tr:hover {
-            background: rgba(78, 204, 163, 0.1);
-        }
-        
-        .hdr-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .hdr-dolby-vision {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-        }
-        
-        .hdr-hdr10plus {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-        
-        .hdr-hdr10 {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-        
-        .hdr-hlg {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-        
-        .hdr-sdr {
-            background: #555;
-            color: #e0e0e0;
-        }
-        
-        .hdr-unknown {
-            background: #444;
-            color: #999;
-        }
-        
-        .el-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 0.9em;
-            margin-left: 5px;
-        }
-        
-        .el-mel {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-        
-        .el-fel {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-        
-        .resolution {
-            color: #4ecca3;
-            font-weight: bold;
-        }
-        
-        .audio-codec {
-            color: #e0e0e0;
-            font-size: 0.9em;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #a0a0a0;
-        }
-        
-        .empty-state h2 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-        
-        @media screen and (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .controls {
-                flex-direction: column;
-            }
-            
-            .button-group {
-                width: 100%;
-                flex-direction: column;
-            }
-            
-            #scanButton, #scanFileButton {
-                width: 100%;
-            }
-            
-            #fileSelect {
-                width: 100%;
-                min-width: 100%;
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            th, td {
-                padding: 10px 8px;
-                font-size: 0.85em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎬 Universal HDR Video Scanner</h1>
-            <p class="subtitle">SDR • HDR10 • HDR10+ • HLG • Dolby Vision (alle Profile)</p>
-        </header>
-        
-        <div class="controls">
-            <div class="stats">
-                Gescannte Medien: <strong id="fileCount">{{ file_count }}</strong>
-            </div>
-            <div class="button-group">
-                <div class="loading" id="loadingIndicator">
-                    <div class="spinner"></div>
-                    <span>Scanne Dateien...</span>
-                </div>
-                <button id="scanButton" onclick="startManualScan()">
-                    🔍 Alle nicht gescannten Medien scannen
-                </button>
-            </div>
-        </div>
-        
-        <div class="controls" style="margin-top: 10px;">
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <label for="fileSelect" style="color: #a0a0a0;">Einzelne Datei scannen:</label>
-                <select id="fileSelect">
-                    <option value="">-- Datei auswählen --</option>
-                </select>
-                <button id="scanFileButton" onclick="scanSelectedFile()" disabled>
-                    ▶️ Ausgewählte Datei scannen
-                </button>
-            </div>
-        </div>
-        
-        <div id="message" class="message"></div>
-        
-        {% if files %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Dateiname</th>
-                    <th>HDR Format</th>
-                    <th>Auflösung</th>
-                    <th>Audio Codec</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for file in files %}
-                <tr>
-                    <td title="{{ file.path }}">{{ file.filename }}</td>
-                    <td>
-                        <span class="hdr-badge hdr-{{ file.hdr_format.lower().replace(' ', '-').replace('+', 'plus') }}">
-                            {{ file.hdr_detail }}
-                        </span>
-                        {% if file.el_type %}
-                        <span class="el-badge el-{{ file.el_type.lower() }}">
-                            {{ file.el_type }}
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td class="resolution">{{ file.resolution }}</td>
-                    <td class="audio-codec">{{ file.audio_codec }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state">
-            <h2>Keine Dolby Vision Profile 7 Medien gefunden</h2>
-            <p>Legen Sie Mediendateien im /media Verzeichnis ab oder klicken Sie auf "Nicht gescannte Medien scannen"</p>
-        </div>
-        {% endif %}
-    </div>
-    
-    <script>
-        function startManualScan() {
-            const button = document.getElementById('scanButton');
-            const loading = document.getElementById('loadingIndicator');
-            const message = document.getElementById('message');
-            
-            // Disable button and show loading
-            button.disabled = true;
-            loading.classList.add('active');
-            message.style.display = 'none';
-            
-            // Make AJAX request to scan endpoint
-            fetch('/scan', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Hide loading
-                loading.classList.remove('active');
-                button.disabled = false;
-                
-                // Show message
-                message.className = 'message';
-                if (data.new_files > 0) {
-                    message.classList.add('success');
-                    message.textContent = `✓ Scan abgeschlossen! ${data.new_files} neue Datei(en) gefunden.`;
-                } else {
-                    message.classList.add('info');
-                    message.textContent = 'ℹ Keine neuen Dateien gefunden.';
-                }
-                message.style.display = 'block';
-                
-                // Reload page if new files were found
-                if (data.new_files > 0) {
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-                }
-            })
-            .catch(error => {
-                loading.classList.remove('active');
-                button.disabled = false;
-                message.className = 'message';
-                message.style.display = 'block';
-                message.textContent = '✗ Fehler beim Scannen: ' + error;
-            });
-        }
-        
-        function loadFileList() {
-            fetch('/get_files')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const select = document.getElementById('fileSelect');
-                        // Clear existing options except first
-                        select.innerHTML = '<option value="">-- Datei auswählen --</option>';
-                        
-                        // Add files to dropdown
-                        data.files.forEach(file => {
-                            const option = document.createElement('option');
-                            option.value = file.path;
-                            option.textContent = file.name + (file.scanned ? ' ✓' : '');
-                            if (file.scanned) {
-                                option.style.color = '#4ecca3';
-                            }
-                            select.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading file list:', error);
-                });
-        }
-        
-        function scanSelectedFile() {
-            const select = document.getElementById('fileSelect');
-            const filePath = select.value;
-            
-            if (!filePath) {
-                return;
-            }
-            
-            const button = document.getElementById('scanFileButton');
-            const loading = document.getElementById('loadingIndicator');
-            const message = document.getElementById('message');
-            
-            // Disable button and show loading
-            button.disabled = true;
-            loading.classList.add('active');
-            message.style.display = 'none';
-            
-            // Make AJAX request to scan specific file
-            fetch('/scan_file', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ file_path: filePath })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Hide loading
-                loading.classList.remove('active');
-                button.disabled = false;
-                
-                // Show message
-                message.className = 'message';
-                if (data.success) {
-                    message.classList.add('success');
-                    message.textContent = '✓ ' + data.message;
-                    
-                    // Reload file list and page
-                    loadFileList();
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    message.classList.add('info');
-                    message.textContent =
-                        (data.success ? '✓ ' : 'ℹ ') +
-                        (data.message || data.error || 'Unbekannter Status');message.textContent = 'ℹ ' + data.message;
-                }
-                message.style.display = 'block';
-            })
-            .catch(error => {
-                loading.classList.remove('active');
-                button.disabled = false;
-                message.className = 'message';
-                message.style.display = 'block';
-                message.textContent = '✗ Fehler beim Scannen: ' + error;
-            });
-        }
-        
-        // Enable/disable scan file button based on selection
-        document.getElementById('fileSelect').addEventListener('change', function() {
-            document.getElementById('scanFileButton').disabled = !this.value;
-        });
-        
-        // Load file list on page load
-        loadFileList();
-        
-        // Auto-refresh every configured interval to show new automatically scanned files
-        setTimeout(() => {
-            location.reload();
-        }, {{ auto_refresh_interval }} * 1000);
-    </script>
-</body>
-</html>
-'''
-
 @app.route('/')
 def index():
     """Main page showing scanned files"""
@@ -1083,10 +631,10 @@ def index():
     # Sort by filename
     files_list.sort(key=lambda x: x['filename'])
     
-    return render_template_string(HTML_TEMPLATE, 
-                                 files=files_list,
-                                 file_count=len(files_list),
-                                 auto_refresh_interval=AUTO_REFRESH_INTERVAL)
+    return render_template('index.html', 
+                         files=files_list,
+                         file_count=len(files_list),
+                         auto_refresh_interval=AUTO_REFRESH_INTERVAL)
 
 @app.route('/scan', methods=['POST'])
 def manual_scan():
@@ -1188,9 +736,37 @@ def scan_single_file():
             'error': str(e)
         }), 500
 
+@app.route('/update_assets', methods=['POST'])
+def update_assets():
+    """Endpoint to manually trigger asset updates"""
+    try:
+        success = update_static_files()
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'All assets updated successfully'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to update some assets'
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 def main():
     """Main application entry point"""
-    print("Starting Dolby Vision Profile 7 Scanner")
+    print("=" * 50)
+    print("Starting Universal HDR Video Scanner")
+    print("=" * 50)
+    
+    # Check and download static files if needed
+    print("Checking static files...")
+    if not download_static_files():
+        print("Warning: Failed to download some static files")
     
     # Clean up any orphaned temporary files from previous runs
     cleanup_temp_directory()
