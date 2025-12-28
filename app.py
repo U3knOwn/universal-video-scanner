@@ -18,11 +18,9 @@ DATA_DIR = '/app/data'
 TEMP_DIR = '/app/temp'
 DB_FILE = os.path.join(DATA_DIR, 'scanned_files.json')
 
-# Scanner configuration constants (can be overridden by environment variables)
-RPU_INFO_MAX_LENGTH = int(os.environ.get('RPU_INFO_MAX_LENGTH', '500'))
+# Scanner configuration constants
 FILE_WRITE_DELAY = int(os.environ.get('FILE_WRITE_DELAY', '5'))
 AUTO_REFRESH_INTERVAL = int(os.environ.get('AUTO_REFRESH_INTERVAL', '60'))
-HEVC_EXTRACT_DURATION = int(os.environ.get('HEVC_EXTRACT_DURATION', '3'))
 
 # Supported video formats
 SUPPORTED_FORMATS = {'.mkv', '.mp4', '.m4v', '.ts', '.hevc'}
@@ -41,7 +39,6 @@ def cleanup_temp_directory():
     try:
         import shutil
         if os.path.exists(TEMP_DIR):
-            # Remove all contents but keep the directory
             for item in os.listdir(TEMP_DIR):
                 item_path = os.path.join(TEMP_DIR, item)
                 try:
@@ -81,52 +78,243 @@ def save_database():
     except Exception as e:
         print(f"Error saving database: {e}")
 
-def extract_hevc_stream(video_file, output_file):
-    """Extract HEVC stream from video file using ffmpeg (first N seconds, configurable via HEVC_EXTRACT_DURATION)"""
+def extract_dovi_metadata(video_file):
+    """
+    Extract Dolby Vision metadata using ffmpeg pipe + dovi_tool JSON output
+    Returns dict with profile + el_type or None
+    """
+    rpu_path = None
+    ffmpeg_proc = None
+    
     try:
-        cmd = [
-            'ffmpeg', '-i', video_file,
-            '-t', str(HEVC_EXTRACT_DURATION),  # Extract first N seconds (configurable)
+        # Extract first second of video
+        ffmpeg_cmd = [
+            'ffmpeg',
+            '-i', video_file,
             '-map', '0:v:0',
-            '-c', 'copy',
-            '-bsf:v', 'hevc_mp4toannexb',
+            '-c:v', 'copy',
+            '-to', '1',
             '-f', 'hevc',
-            output_file,
-            '-y'
+            '-'
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        if result.returncode != 0:
-            print(f"Error extracting HEVC stream from {video_file}: ffmpeg stderr: {result.stderr}")
-        return result.returncode == 0
-    except Exception as e:
-        print(f"Error extracting HEVC stream: {e}")
-        return False
 
-def extract_rpu(hevc_file, rpu_file):
-    """Extract RPU from HEVC file using dovi_tool"""
-    try:
-        cmd = ['dovi_tool', 'extract-rpu', hevc_file, '-o', rpu_file]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        if result.returncode != 0:
-            print(f"Error extracting RPU from {hevc_file}: dovi_tool stderr: {result.stderr}")
-        return result.returncode == 0 and os.path.exists(rpu_file)
-    except Exception as e:
-        print(f"Error extracting RPU: {e}")
-        return False
+        ffmpeg_proc = subprocess.Popen(
+            ffmpeg_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL
+        )
 
-def analyze_rpu(rpu_file):
-    """Analyze RPU file using dovi_tool info"""
+        # Create temp file for RPU data
+        with tempfile.NamedTemporaryFile(dir=TEMP_DIR, suffix='.bin', delete=False) as rpu_tmp:
+            rpu_path = rpu_tmp.name
+
+        # Extract RPU metadata
+        dovi_extract = subprocess.run(
+            ['dovi_tool', 'extract-rpu', '-', '-o', rpu_path],
+            stdin=ffmpeg_proc.stdout,
+            capture_output=True,
+            timeout=30
+        )
+        
+        # Wait for ffmpeg to complete
+        if ffmpeg_proc:
+            ffmpeg_proc.wait(timeout=30)
+
+        # Check if RPU file was created and has content
+        if not os.path.exists(rpu_path):
+            print(f"  [DV] No RPU file created for {os.path.basename(video_file)}")
+            return None
+            
+        if os.path.getsize(rpu_path) == 0:
+            print(f"  [DV] Empty RPU file for {os.path.basename(video_file)}")
+            return None
+
+        # Get Dolby Vision info from RPU
+        dovi_info = subprocess.run(
+            ['dovi_tool', 'info', '-i', rpu_path, '-f', '0'],
+            capture_output=True,
+            timeout=30
+        )
+
+        if dovi_info.returncode != 0:
+            stderr = dovi_info.stderr.decode('utf-8', errors='ignore')
+            print(f"  [DV] dovi_tool info failed for {os.path.basename(video_file)}: {stderr}")
+            return None
+
+        # Parse output
+        output = dovi_info.stdout.decode('utf-8')
+        
+        # The output format is: first line is summary, rest is JSON
+        lines = output.strip().split('\n')
+        if len(lines) < 2:
+            print(f"  [DV] Unexpected dovi_tool output format for {os.path.basename(video_file)}")
+            return None
+            
+        json_data = '\n'.join(lines[1:])
+        metadata = json.loads(json_data)
+        
+        profile = metadata.get('dovi_profile')
+        el_type = metadata.get('el_type', '').upper()
+        
+        print(f"  [DV] Dolby Vision detected: Profile {profile}, EL Type: {el_type or 'None'}")
+
+        return {
+            'profile': profile,
+            'el_type': el_type if el_type else ''
+        }
+
+    except subprocess.TimeoutExpired as e:
+        print(f"  [DV] Timeout while extracting Dolby Vision metadata: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"  [DV] Failed to parse dovi_tool JSON output: {e}")
+        return None
+    except Exception as e:
+        print(f"  [DV] Dolby Vision extraction error for {os.path.basename(video_file)}: {e}")
+        return None
+    finally:
+        # Clean up temp file
+        try:
+            if rpu_path and os.path.exists(rpu_path):
+                os.remove(rpu_path)
+        except Exception as e:
+            print(f"  [DV] Failed to remove temp file {rpu_path}: {e}")
+        
+        # Ensure ffmpeg process is terminated
+        try:
+            if ffmpeg_proc and ffmpeg_proc.poll() is None:
+                ffmpeg_proc.terminate()
+                ffmpeg_proc.wait(timeout=5)
+        except Exception:
+            pass
+
+
+def detect_hdr_format(video_file):
+    """
+    Detect HDR format: SDR, HDR10, HDR10+, HLG, Dolby Vision (FEL/MEL)
+    Returns dict with 'format', 'detail', and optionally 'profile'/'el_type'
+    """
     try:
-        cmd = ['dovi_tool', 'info', rpu_file]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        print(f"[HDR] Analyzing: {os.path.basename(video_file)}")
+        
+        # --- Step 1: Dolby Vision ---
+        dovi = extract_dovi_metadata(video_file)
+        if dovi:
+            profile = dovi.get('profile')
+            el_type = dovi.get('el_type', '').upper()
+            detail = f'Profile {profile}'
+            print(f"  -> Dolby Vision {detail}")
+            return {
+                'format': 'Dolby Vision',
+                'profile': profile,
+                'el_type': el_type,
+                'detail': detail
+            }
+
+        # --- Step 2: HDR10+ (dynamic metadata) ---
+        cmd = [
+            'ffprobe', '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=side_data',
+            '-of', 'json',
+            video_file
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if result.returncode == 0:
-            return result.stdout
-        else:
-            print(f"Error analyzing RPU {rpu_file}: dovi_tool stderr: {result.stderr}")
-        return None
+            try:
+                data = json.loads(result.stdout)
+                streams = data.get('streams', [])
+                if streams:
+                    side_data = streams[0].get('side_data_list', [])
+                    for sd in side_data:
+                        sd_type = sd.get('side_data_type', '').lower()
+                        if sd_type in ['hdr10+ metadata', 'hdr dynamic metadata smpte2094-40']:
+                            print(f"  -> HDR10+ detected (side_data)")
+                            return {
+                                'format': 'HDR10+',
+                                'detail': 'HDR10+',
+                                'profile': 'HDR10+',
+                                'el_type': ''
+                            }
+            except Exception as e:
+                print(f"  [HDR] HDR10+ side_data parsing failed: {e}")
+
+        # Fallback: Full stream info text search
+        cmd = [
+            'ffprobe', '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_streams',
+            video_file
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            output_lower = result.stdout.lower()
+            if any(indicator in output_lower for indicator in ['hdr10+', 'hdr10plus', 'smpte st 2094', 'smpte2094', 'smpte-st-2094']):
+                print(f"  -> HDR10+ detected (fallback text search)")
+                return {
+                    'format': 'HDR10+',
+                    'detail': 'HDR10+',
+                    'profile': 'HDR10+',
+                    'el_type': ''
+                }
+
+        # --- Step 3: HDR10 / HLG (static metadata) ---
+        cmd = [
+            'ffprobe', '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=color_transfer,color_primaries',
+            '-of', 'json',
+            video_file
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            streams = data.get('streams', [])
+            if streams:
+                stream = streams[0]
+                color_transfer = (stream.get('color_transfer') or '').lower()
+                color_primaries = (stream.get('color_primaries') or '').lower()
+
+                print(f"  color_transfer: '{color_transfer}'")
+                print(f"  color_primaries: '{color_primaries}'")
+
+                # HDR10 uses PQ (SMPTE2084) + BT.2020
+                if any(indicator in color_transfer for indicator in ['smpte2084', 'smpte 2084', 'smpte-2084', 'pq']):
+                    print(f"  -> HDR10 detected")
+                    return {
+                        'format': 'HDR10',
+                        'detail': 'HDR10',
+                        'profile': 'HDR10',
+                        'el_type': ''
+                    }
+
+                # HLG (Hybrid Log-Gamma)
+                if any(indicator in color_transfer for indicator in ['arib-std-b67', 'arib std b67', 'hlg', 'hybrid log-gamma']):
+                    print(f"  -> HLG detected")
+                    return {
+                        'format': 'HLG',
+                        'detail': 'HLG (Hybrid Log-Gamma)',
+                        'profile': 'HLG',
+                        'el_type': ''
+                    }
+
+        # --- Step 4: Fallback to SDR ---
+        print(f"  -> Fallback to SDR")
+        return {
+            'format': 'SDR',
+            'detail': 'SDR',
+            'profile': 'SDR',
+            'el_type': ''
+        }
+
     except Exception as e:
-        print(f"Error analyzing RPU: {e}")
-        return None
+        print(f"[HDR] Error detecting HDR format for {os.path.basename(video_file)}: {e}")
+        return {
+            'format': 'Unknown',
+            'detail': 'Unknown',
+            'profile': 'Unknown',
+            'el_type': ''
+        }
 
 def get_video_resolution(video_file):
     """Get video resolution using ffprobe and return friendly name"""
@@ -166,7 +354,6 @@ def get_video_resolution(video_file):
                 elif width == 640 and height == 480:
                     return "SD (480p)"
                 else:
-                    # For non-standard resolutions, show both friendly and actual
                     return f"{width}x{height}"
     except Exception as e:
         print(f"Error getting resolution: {e}")
@@ -226,7 +413,6 @@ def get_audio_codec(video_file):
                         return 'Dolby TrueHD (Atmos)'
                     return 'Dolby TrueHD'
                 elif codec_name in ['dts', 'dca']:
-                    # Detect DTS variants
                     if 'dts:x' in title or 'dtsx' in title:
                         if is_imax:
                             return 'DTS:X (IMAX)'
@@ -256,94 +442,44 @@ def get_audio_codec(video_file):
         print(f"Error getting audio codec: {e}")
     return "Unknown"
 
-def parse_dovi_info(info_output):
-    """Parse dovi_tool info output to extract profile and enhancement layer type"""
-    profile = None
-    el_type = None
-    
-    if not info_output:
-        return profile, el_type
-    
-    lines = info_output.split('\n')
-    for line in lines:
-        line = line.strip()
-        if 'Profile' in line or 'profile' in line:
-            # Try to extract profile number
-            if 'profile 7' in line.lower() or 'profile: 7' in line.lower():
-                profile = 7
-            elif 'dv profile 7' in line.lower():
-                profile = 7
-        
-        if 'MEL' in line.upper():
-            el_type = 'MEL'
-        elif 'FEL' in line.upper():
-            el_type = 'FEL'
-    
-    return profile, el_type
-
 def scan_video_file(file_path):
-    """Scan a single video file for Dolby Vision information"""
+    """Scan a video file and extract all metadata"""
     print(f"Scanning: {file_path}")
-    
-    # Check if already scanned
+
     if file_path in scanned_paths:
-        print(f"Already scanned: {file_path}")
-        return None
-    
-    # Use dedicated temp directory in Docker container
-    with tempfile.TemporaryDirectory(dir=TEMP_DIR) as tmpdir:
-        hevc_file = os.path.join(tmpdir, 'stream.hevc')
-        rpu_file = os.path.join(tmpdir, 'RPU.bin')
-        
-        # Extract HEVC stream
-        if not extract_hevc_stream(file_path, hevc_file):
-            print(f"Failed to extract HEVC stream from: {file_path}")
-            return None
-        
-        # Extract RPU
-        if not extract_rpu(hevc_file, rpu_file):
-            print(f"No RPU found in: {file_path}")
-            return None
-        
-        # Analyze RPU
-        info_output = analyze_rpu(rpu_file)
-        if not info_output:
-            print(f"Failed to analyze RPU: {file_path}")
-            return None
-        
-        # Parse info
-        profile, el_type = parse_dovi_info(info_output)
-        
-        # Only process Profile 7
-        if profile != 7:
-            print(f"Not Profile 7: {file_path}")
-            return None
-        
-        # Get resolution
-        resolution = get_video_resolution(file_path)
-        
-        # Get audio codec
-        audio_codec = get_audio_codec(file_path)
-        
-        # Store result
-        file_info = {
-            'filename': os.path.basename(file_path),
-            'path': file_path,
-            'profile': profile,
-            'el_type': el_type if el_type else 'Unknown',
-            'resolution': resolution,
-            'audio_codec': audio_codec,
-            'rpu_info': info_output[:RPU_INFO_MAX_LENGTH] if info_output else ''
+        return {
+            'success': False,
+            'message': 'Datei wurde bereits gescannt'
         }
-        
-        with scan_lock:
-            scanned_files[file_path] = file_info
-            scanned_paths.add(file_path)
-            save_database()
-        
-        print(f"Successfully scanned: {file_path} - Profile {profile} ({el_type})")
-        return file_info
-    # Temporary files (HEVC stream, RPU) are automatically cleaned up here
+
+    # Detect HDR format
+    hdr_info = detect_hdr_format(file_path)
+    resolution = get_video_resolution(file_path)
+    audio_codec = get_audio_codec(file_path)
+
+    file_info = {
+        'filename': os.path.basename(file_path),
+        'path': file_path,
+        'hdr_format': hdr_info.get('format', 'Unknown'),
+        'hdr_detail': hdr_info.get('detail', 'Unknown'),
+        'profile': hdr_info.get('profile'),
+        'el_type': hdr_info.get('el_type'),
+        'resolution': resolution,
+        'audio_codec': audio_codec
+    }
+
+    with scan_lock:
+        scanned_files[file_path] = file_info
+        scanned_paths.add(file_path)
+        save_database()
+
+    print(f"✓ Gescannt: {file_path} ({hdr_info.get('format')})")
+
+    return {
+        'success': True,
+        'message': f'{hdr_info.get("format")} erkannt',
+        'file_info': file_info
+    }
 
 def scan_directory(directory):
     """Scan directory for video files"""
@@ -385,7 +521,6 @@ class MediaFileHandler(FileSystemEventHandler):
         
         if ext in SUPPORTED_FORMATS:
             print(f"New file detected: {file_path}")
-            # Wait to ensure file is fully written
             time.sleep(FILE_WRITE_DELAY)
             try:
                 scan_video_file(file_path)
@@ -405,14 +540,14 @@ def start_file_observer():
     print(f"File observer started for: {MEDIA_PATH}")
     return observer
 
-# HTML Template with Dark Theme
+# HTML Template
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dolby Vision Profile 7 Scanner</title>
+    <title>Universal HDR Video Scanner</title>
     <style>
         * {
             margin: 0;
@@ -521,10 +656,6 @@ HTML_TEMPLATE = '''
             color: #e0e0e0;
         }
         
-        #fileSelect option:disabled {
-            color: #666;
-        }
-        
         .loading {
             display: none;
             align-items: center;
@@ -604,14 +735,42 @@ HTML_TEMPLATE = '''
             background: rgba(78, 204, 163, 0.1);
         }
         
-        .profile-badge {
+        .hdr-badge {
             display: inline-block;
             padding: 5px 12px;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
             border-radius: 15px;
             font-weight: bold;
             font-size: 0.9em;
+        }
+        
+        .hdr-dolby-vision {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+        
+        .hdr-hdr10plus {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .hdr-hdr10 {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .hdr-hlg {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .hdr-sdr {
+            background: #555;
+            color: #e0e0e0;
+        }
+        
+        .hdr-unknown {
+            background: #444;
+            color: #999;
         }
         
         .el-badge {
@@ -620,6 +779,7 @@ HTML_TEMPLATE = '''
             border-radius: 15px;
             font-weight: bold;
             font-size: 0.9em;
+            margin-left: 5px;
         }
         
         .el-mel {
@@ -630,11 +790,6 @@ HTML_TEMPLATE = '''
         .el-fel {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-        }
-        
-        .el-unknown {
-            background: #555;
-            color: #a0a0a0;
         }
         
         .resolution {
@@ -658,42 +813,17 @@ HTML_TEMPLATE = '''
             margin-bottom: 10px;
         }
         
-        .rpu-info {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #a0a0a0;
-            font-size: 0.85em;
-            font-family: monospace;
-        }
-        
-        /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             body {
                 padding: 10px;
-            }
-            
-            .container {
-                max-width: 100%;
-            }
-            
-            header {
-                padding: 15px 10px;
-                margin-bottom: 15px;
             }
             
             h1 {
                 font-size: 1.8em;
             }
             
-            .subtitle {
-                font-size: 0.9em;
-            }
-            
             .controls {
                 flex-direction: column;
-                padding: 10px;
             }
             
             .button-group {
@@ -703,98 +833,21 @@ HTML_TEMPLATE = '''
             
             #scanButton, #scanFileButton {
                 width: 100%;
-                padding: 15px 20px;
-                font-size: 1.1em;
             }
             
             #fileSelect {
                 width: 100%;
                 min-width: 100%;
-                max-width: 100%;
-                font-size: 1em;
             }
             
-            .stats {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 10px;
-            }
-            
-            /* Make table scrollable horizontally on mobile */
             table {
                 display: block;
                 overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            thead, tbody, tr {
-                display: table;
-                width: 100%;
-                table-layout: fixed;
             }
             
             th, td {
                 padding: 10px 8px;
                 font-size: 0.85em;
-            }
-            
-            th {
-                font-size: 0.75em;
-            }
-            
-            .profile-badge, .el-badge {
-                font-size: 0.8em;
-                padding: 4px 8px;
-            }
-            
-            .resolution {
-                font-size: 0.9em;
-            }
-            
-            .audio-codec {
-                font-size: 0.75em;
-            }
-            
-            .rpu-info {
-                max-width: 150px;
-                font-size: 0.75em;
-            }
-            
-            .empty-state {
-                padding: 40px 15px;
-            }
-            
-            .empty-state h2 {
-                font-size: 1.2em;
-            }
-            
-            .message {
-                font-size: 0.9em;
-                padding: 8px 15px;
-            }
-        }
-        
-        @media screen and (max-width: 480px) {
-            h1 {
-                font-size: 1.5em;
-            }
-            
-            .subtitle {
-                font-size: 0.8em;
-            }
-            
-            #scanButton, #scanFileButton {
-                font-size: 1em;
-                padding: 12px 15px;
-            }
-            
-            th, td {
-                padding: 8px 5px;
-                font-size: 0.75em;
-            }
-            
-            .rpu-info {
-                max-width: 100px;
             }
         }
     </style>
@@ -802,8 +855,8 @@ HTML_TEMPLATE = '''
 <body>
     <div class="container">
         <header>
-            <h1>🎬 Dolby Vision Profile 7 Scanner</h1>
-            <p class="subtitle">MEL/FEL Enhancement Layer Detection</p>
+            <h1>🎬 Universal HDR Video Scanner</h1>
+            <p class="subtitle">SDR • HDR10 • HDR10+ • HLG • Dolby Vision (alle Profile)</p>
         </header>
         
         <div class="controls">
@@ -840,26 +893,27 @@ HTML_TEMPLATE = '''
             <thead>
                 <tr>
                     <th>Dateiname</th>
-                    <th>DV Profile</th>
-                    <th>Enhancement Layer</th>
+                    <th>HDR Format</th>
                     <th>Auflösung</th>
                     <th>Audio Codec</th>
-                    <th>RPU Info</th>
                 </tr>
             </thead>
             <tbody>
                 {% for file in files %}
                 <tr>
                     <td title="{{ file.path }}">{{ file.filename }}</td>
-                    <td><span class="profile-badge">Profile {{ file.profile }}</span></td>
                     <td>
+                        <span class="hdr-badge hdr-{{ file.hdr_format.lower().replace(' ', '-').replace('+', 'plus') }}">
+                            {{ file.hdr_detail }}
+                        </span>
+                        {% if file.el_type %}
                         <span class="el-badge el-{{ file.el_type.lower() }}">
                             {{ file.el_type }}
                         </span>
+                        {% endif %}
                     </td>
                     <td class="resolution">{{ file.resolution }}</td>
                     <td class="audio-codec">{{ file.audio_codec }}</td>
-                    <td class="rpu-info" title="{{ file.rpu_info }}">{{ file.rpu_info[:100] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -990,7 +1044,9 @@ HTML_TEMPLATE = '''
                     }, 2000);
                 } else {
                     message.classList.add('info');
-                    message.textContent = 'ℹ ' + data.message;
+                    message.textContent =
+                        (data.success ? '✓ ' : 'ℹ ') +
+                        (data.message || data.error || 'Unbekannter Status');message.textContent = 'ℹ ' + data.message;
                 }
                 message.style.display = 'block';
             })
@@ -1145,9 +1201,10 @@ def main():
     # Start file observer in background
     observer = start_file_observer()
     
-    # NOTE: Initial scan removed - user must manually trigger first scan via button
-    print("Ready. Use the scan button in the web interface to start scanning.")
-    
+    # Start initial scan automatically in background
+    threading.Thread(target=background_scan_new_files, daemon=True).start()
+    print("Initial scan gestartet...")
+
     # Start Flask app
     try:
         app.run(host='0.0.0.0', port=2367, debug=False)
