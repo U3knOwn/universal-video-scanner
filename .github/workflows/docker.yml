@@ -9,18 +9,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
         run: |
-          docker build -t dovi-detector:latest1 .
+          docker build -t dovi-detector:latest .
 
       - name: Save Docker image as .tar
         run: |
-          docker save dovi-detector:latest1 -o dovi-detector.tar
+          docker save dovi-detector:latest -o dovi-detector.tar
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4

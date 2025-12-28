@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import json
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -121,7 +122,6 @@ def update_static_files():
 def cleanup_temp_directory():
     """Clean up temporary directory to prevent accumulation of orphaned files"""
     try:
-        import shutil
         if os.path.exists(TEMP_DIR):
             for item in os.listdir(TEMP_DIR):
                 item_path = os.path.join(TEMP_DIR, item)
@@ -533,7 +533,7 @@ def scan_video_file(file_path):
     if file_path in scanned_paths:
         return {
             'success': False,
-            'message': 'Datei wurde bereits gescannt'
+            'message': 'File already scanned'
         }
 
     # Detect HDR format
@@ -557,11 +557,11 @@ def scan_video_file(file_path):
         scanned_paths.add(file_path)
         save_database()
 
-    print(f"✓ Gescannt: {file_path} ({hdr_info.get('format')})")
+    print(f"✓ Scanned: {file_path} ({hdr_info.get('format')})")
 
     return {
         'success': True,
-        'message': f'{hdr_info.get("format")} erkannt',
+        'message': f'{hdr_info.get("format")} detected',
         'file_info': file_info
     }
 
@@ -779,7 +779,7 @@ def main():
     
     # Start initial scan automatically in background
     threading.Thread(target=background_scan_new_files, daemon=True).start()
-    print("Initial scan gestartet...")
+    print("Initial scan started...")
 
     # Start Flask app
     try:

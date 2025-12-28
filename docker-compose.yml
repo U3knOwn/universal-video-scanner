@@ -13,5 +13,4 @@ services:
     environment:
       - MEDIA_PATH=/media
       - AUTO_REFRESH_INTERVAL=60
-      - RPU_INFO_MAX_LENGTH=500
       - FILE_WRITE_DELAY=5
