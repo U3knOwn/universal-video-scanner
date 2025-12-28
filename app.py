@@ -182,7 +182,7 @@ def cleanup_database():
     if paths_to_remove:
         with scan_lock:
             for file_path in paths_to_remove:
-                if file_path in scanned_files:  # Double-check in case it was modified
+                if file_path in scanned_files:  # Check if still exists in case another thread already removed it
                     del scanned_files[file_path]
                     scanned_paths.discard(file_path)
                     removed_count += 1
