@@ -16,11 +16,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t dovi-detector:latest .
+          docker build -t dovi-detector:latest1 .
 
       - name: Save Docker image as .tar
         run: |
-          docker save dovi-detector:latest -o dovi-detector.tar
+          docker save dovi-detector:latest1 -o dovi-detector.tar
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
