@@ -27,7 +27,7 @@ header {
 
 h1 {
     font-size: 2.5em;
-    color: #4ecca3;
+    color: #e6eef6;
     margin-bottom: 10px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -66,7 +66,7 @@ h1 {
 
 .lang-btn {
     padding: 5px 12px;
-    border: 1px solid #4ecca3;
+    border: 1px solid #e6eef6;
     background: transparent;
     color: #a0a0a0;
     border-radius: 5px;
@@ -77,11 +77,11 @@ h1 {
 
 .lang-btn:hover {
     background: rgba(78, 204, 163, 0.2);
-    color: #4ecca3;
+    color: #e6eef6;
 }
 
 .lang-btn.active {
-    background: #4ecca3;
+    background: #e6eef6;
     color: #1e1e2e;
     font-weight: bold;
 }
@@ -112,7 +112,7 @@ h1 {
 }
 
 .stats strong {
-    color: #4ecca3;
+    color: #e6eef6;
     font-size: 1.2em;
 }
 
@@ -141,7 +141,7 @@ h1 {
     width: 20px;
     height: 20px;
     border: 3px solid rgba(78, 204, 163, 0.3);
-    border-top-color: #4ecca3;
+    border-top-color: #e6eef6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -159,8 +159,8 @@ h1 {
 
 .message.success {
     background: rgba(78, 204, 163, 0.2);
-    border: 1px solid #4ecca3;
-    color: #4ecca3;
+    border: 1px solid #e6eef6;
+    color: #e6eef6;
 }
 
 .message.info {
@@ -178,8 +178,8 @@ table {
 }
 
 thead {
-    background: linear-gradient(135deg, #4ecca3 0%, #3da88a 100%);
-    color: #1e1e2e;
+    background: #181825;
+    color: #e6eef6;
 }
 
 th {
@@ -205,7 +205,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-    background: rgba(78, 204, 163, 0.1);
+    background: rgba(7, 7, 11, 0.5);
 }
 
 .hdr-badge {
@@ -397,17 +397,17 @@ tbody tr:hover {
 }
 
 .resolution {
-    color: #4ecca3;
+    color: #e6eef6;
 }
 
 .audio-codec {
-    color: #4ecca3;
+    color: #e6eef6;
 }
 
 .poster-img {
     max-height: 150px;
     width: auto;
-    border-radius: 5px;
+    border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     transition: transform 0.3s ease;
 }
@@ -721,7 +721,7 @@ tbody tr:hover {
         padding: 15px;
     }
     tr:hover {
-        background: rgba(78, 204, 163, 0.1);
+        background: rgba(7, 7, 11, 0.5);
     }
     td {
         display: block;
@@ -740,7 +740,7 @@ tbody tr:hover {
         width: 45%;
         padding-right: 10px;
         font-weight: bold;
-        color: #4ecca3;
+        color: #e6eef6;
         text-transform: uppercase;
         font-size: 0.85em;
     }
