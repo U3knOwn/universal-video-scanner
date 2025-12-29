@@ -246,8 +246,37 @@ function searchMedia() {
     const rows = document.querySelectorAll('#mediaTable tbody tr');
     
     rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
+        // Get searchable content from specific cells only
+        const posterCell = row.querySelector('td:nth-child(1)');
+        const hdrCell = row.querySelector('td:nth-child(2)');
+        const resolutionCell = row.querySelector('td:nth-child(3)');
+        const audioCell = row.querySelector('td:nth-child(4)');
+        
+        // Build searchable text from relevant content
+        let searchableText = '';
+        
+        // From poster cell: get title or filename
+        if (posterCell) {
+            const posterTitle = posterCell.querySelector('.poster-title');
+            const filenameFallback = posterCell.querySelector('.filename-fallback');
+            if (posterTitle) {
+                searchableText += posterTitle.textContent + ' ';
+            } else if (filenameFallback) {
+                searchableText += filenameFallback.textContent + ' ';
+            } else {
+                // Fallback to title attribute
+                const title = posterCell.getAttribute('title');
+                if (title) searchableText += title + ' ';
+            }
+        }
+        
+        // From other cells: get text content
+        if (hdrCell) searchableText += hdrCell.textContent + ' ';
+        if (resolutionCell) searchableText += resolutionCell.textContent + ' ';
+        if (audioCell) searchableText += audioCell.textContent + ' ';
+        
+        // Check if search term is in the searchable text
+        row.style.display = searchableText.toLowerCase().includes(searchTerm) ? '' : 'none';
     });
 }
 

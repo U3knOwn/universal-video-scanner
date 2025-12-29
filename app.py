@@ -262,8 +262,9 @@ def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
                 title, year = extract_title_and_year_from_tmdb(data, media_type)
                 poster_url = f'https://image.tmdb.org/t/p/original{poster_path}'
                 return poster_url, title, year
-            
-            # If no German poster, try English
+        
+        # If German request failed or didn't have poster, try English
+        if response.status_code != 200 or not data.get('poster_path'):
             params = {'api_key': TMDB_API_KEY, 'language': 'en'}
             response = requests.get(url, params=params, timeout=10)
             
@@ -275,7 +276,8 @@ def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
                     title, year = extract_title_and_year_from_tmdb(data, media_type)
                     poster_url = f'https://image.tmdb.org/t/p/original{poster_path}'
                     return poster_url, title, year
-        elif response.status_code != 404:
+        
+        if response.status_code not in [200, 404]:
             print(
                 f"TMDB API error for ID {tmdb_id}: HTTP {
                     response.status_code}")
@@ -327,27 +329,29 @@ def search_tmdb_poster(movie_name, media_type='movie'):
                     title, year = extract_title_and_year_from_tmdb(first_result, media_type)
                     poster_url = f'https://image.tmdb.org/t/p/original{poster_path}'
                     return poster_url, title, year
-                
-                # If no German poster, try English
-                params = {
-                    'api_key': TMDB_API_KEY,
-                    'query': movie_name,
-                    'language': 'en'
-                }
-                
-                response = requests.get(url, params=params, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    results = data.get('results', [])
-                    if results:
-                        first_result = results[0]
-                        poster_path = first_result.get('poster_path')
-                        
-                        if poster_path:
-                            title, year = extract_title_and_year_from_tmdb(first_result, media_type)
-                            poster_url = f'https://image.tmdb.org/t/p/original{poster_path}'
-                            return poster_url, title, year
-        elif response.status_code != 404:
+        
+        # If German search failed or returned no results with posters, try English
+        if response.status_code != 200 or not results or not results[0].get('poster_path'):
+            params = {
+                'api_key': TMDB_API_KEY,
+                'query': movie_name,
+                'language': 'en'
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                results = data.get('results', [])
+                if results:
+                    first_result = results[0]
+                    poster_path = first_result.get('poster_path')
+                    
+                    if poster_path:
+                        title, year = extract_title_and_year_from_tmdb(first_result, media_type)
+                        poster_url = f'https://image.tmdb.org/t/p/original{poster_path}'
+                        return poster_url, title, year
+        
+        if response.status_code not in [200, 404]:
             print(
                 f"TMDB API search error for '{movie_name}': HTTP {
                     response.status_code}")
