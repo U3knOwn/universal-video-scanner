@@ -73,7 +73,7 @@
             </thead>
             <tbody>
                 {% for file in files %}
-                {# Wir fügen data-Attribute hinzu, damit das JS die Sortierung nachvollziehen kann #}
+                {# We add data attributes so JS can handle sorting #}
                 <tr data-hdr-format="{{ file.hdr_format }}" data-hdr-detail="{{ file.hdr_detail }}" data-el-type="{{ file.el_type or '' }}">
                     <td data-label-i18n="table_header_poster" data-label="Poster / Dateiname" title="{{ file.filename }}">
                         {% if file.poster_url %}
