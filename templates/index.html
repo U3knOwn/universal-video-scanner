@@ -58,9 +58,11 @@
                     <td data-label="Poster / Dateiname" title="{{ file.filename }}">
                         {% if file.poster_url %}
                         <div class="poster-container">
+                            {% if file.tmdb_title %}
                             <span class="poster-title">
                                 {{ file.tmdb_title }}{% if file.tmdb_year %} ({{ file.tmdb_year }}){% endif %}
                             </span>
+                            {% endif %}
                             <img src="{{ file.poster_url }}" alt="{{ file.filename }}" class="poster-img" loading="lazy">
                         </div>
                         {% else %}
