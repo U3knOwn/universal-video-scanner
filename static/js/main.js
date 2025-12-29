@@ -1,3 +1,77 @@
+// i18n System
+let currentLang = 'de';
+let translations = {};
+
+async function loadTranslations(lang) {
+    try {
+        const response = await fetch(`/static/locale/${lang}.json`);
+        if (!response.ok) throw new Error('Translation file not found');
+        translations = await response.json();
+        return true;
+    } catch (error) {
+        console.error('Error loading translations:', error);
+        return false;
+    }
+}
+
+function t(key, replacements = {}) {
+    let text = translations[key] || key;
+    for (const [placeholder, value] of Object.entries(replacements)) {
+        text = text.replace(`{${placeholder}}`, value);
+    }
+    return text;
+}
+
+function applyTranslations() {
+    // Text content
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[key]) el.textContent = translations[key];
+    });
+    
+    // HTML content
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (translations[key]) el.innerHTML = translations[key];
+    });
+    
+    // Data labels
+    document.querySelectorAll('[data-label-i18n]').forEach(el => {
+        const key = el.getAttribute('data-label-i18n');
+        if (translations[key]) el.setAttribute('data-label', translations[key]);
+    });
+    
+    updateLanguageButtons();
+}
+
+function updateLanguageButtons() {
+    const langDe = document.getElementById('langDe');
+    const langEn = document.getElementById('langEn');
+    if (langDe && langEn) {
+        langDe.classList.toggle('active', currentLang === 'de');
+        langEn.classList.toggle('active', currentLang === 'en');
+    }
+}
+
+async function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('dovi_language', lang);
+    document.documentElement.lang = lang;
+    const loaded = await loadTranslations(lang);
+    if (loaded) {
+        applyTranslations();
+        loadFileList(); // Dropdown aktualisieren
+    }
+}
+
+async function initLanguage() {
+    const savedLang = localStorage.getItem('dovi_language') || 'de';
+    currentLang = savedLang;
+    document.documentElement.lang = savedLang;
+    await loadTranslations(savedLang);
+    applyTranslations();
+}
+
 // Bestehende Funktionen (startManualScan, loadFileList, scanSelectedFile) bleiben erhalten.
 // Ich erweitere das Script um Sortier-Logik und Initialisierung.
 
@@ -25,10 +99,10 @@ function startManualScan() {
         message.className = 'message';
         if (data.new_files > 0) {
             message.classList.add('success');
-            message.textContent = `✓ Scan abgeschlossen! ${data.new_files} neue Datei(en) gefunden.`;
+            message.textContent = `✓ ${t('scan_complete', { count: data.new_files })}`;
         } else {
             message.classList.add('info');
-            message.textContent = 'ℹ Keine neuen Dateien gefunden.';
+            message.textContent = `ℹ ${t('no_new_files')}`;
         }
         message.style.display = 'block';
         
@@ -44,7 +118,7 @@ function startManualScan() {
         button.disabled = false;
         message.className = 'message';
         message.style.display = 'block';
-        message.textContent = '✗ Fehler beim Scannen: ' + error;
+        message.textContent = `✗ ${t('scan_error')}: ${error}`;
     });
 }
 
@@ -55,7 +129,7 @@ function loadFileList() {
             if (data.success) {
                 const select = document.getElementById('fileSelect');
                 // Clear existing options except first
-                select.innerHTML = '<option value="">-- Datei auswählen --</option>';
+                select.innerHTML = `<option value="">${t('select_file')}</option>`;
                 
                 // Add files to dropdown
                 data.files.forEach(file => {
@@ -139,7 +213,7 @@ function scanSelectedFile() {
         button.disabled = false;
         message.className = 'message';
         message.style.display = 'block';
-        message.textContent = '✗ Fehler beim Scannen der Datei: ' + error;
+        message.textContent = `✗ ${t('file_scan_error')}: ${error}`;
     });
 }
 
@@ -260,19 +334,22 @@ function applySort(mode) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Lade Dateiliste für Scan-Dropdown
-    loadFileList();
+    // Initialize language first
+    initLanguage().then(() => {
+        // Lade Dateiliste für Scan-Dropdown
+        loadFileList();
 
-    // Initiale Sortierung anwenden
-    applySort();
+        // Initiale Sortierung anwenden
+        applySort();
 
-    // Listener für Sortenauswahl
-    const sortSelect = document.getElementById('sortSelect');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-            const mode = this.value || 'filename';
-            localStorage.setItem('dovi_sort_mode', mode);
-            applySort(mode);
-        });
-    }
+        // Listener für Sortenauswahl
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const mode = this.value || 'filename';
+                localStorage.setItem('dovi_sort_mode', mode);
+                applySort(mode);
+            });
+        }
+    });
 });

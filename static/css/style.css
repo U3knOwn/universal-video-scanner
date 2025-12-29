@@ -33,6 +33,37 @@ h1 {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.language-switcher {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #a0a0a0;
+}
+
+.lang-btn {
+    padding: 5px 12px;
+    border: 1px solid #4ecca3;
+    background: transparent;
+    color: #a0a0a0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    background: rgba(78, 204, 163, 0.2);
+    color: #4ecca3;
+}
+
+.lang-btn.active {
+    background: #4ecca3;
+    color: #1e1e2e;
+    font-weight: bold;
+}
+
 .subtitle {
     color: #a0a0a0;
     font-size: 1.1em;

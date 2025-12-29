@@ -9,20 +9,25 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎬 DoVi Detector</h1>
+            <h1>🎬 <span data-i18n="title">DoVi Detector</span></h1>
+            <div class="language-switcher">
+                <span data-i18n="language">Sprache</span>: 
+                <button id="langDe" class="lang-btn active" onclick="setLanguage('de')">🇩🇪 DE</button>
+                <button id="langEn" class="lang-btn" onclick="setLanguage('en')">🇬🇧 EN</button>
+            </div>
         </header>
         
         <div class="controls">
             <div class="stats">
-                Medien: <strong id="fileCount">{{ file_count }}</strong>
+                <span data-i18n="media_count">Medien</span>: <strong id="fileCount">{{ file_count }}</strong>
             </div>
             <div class="button-group">
                 <div class="loading" id="loadingIndicator">
                     <div class="spinner"></div>
-                    <span>Scanne...</span>
+                    <span data-i18n="scanning">Scanne...</span>
                 </div>
                 <button id="scanButton" onclick="startManualScan()">
-                    🔍 Alle Medien scannen
+                    🔍 <span data-i18n="scan_all_button">Alle Medien scannen</span>
                 </button>
             </div>
         </div>
@@ -31,18 +36,18 @@
             <!-- Linke Seite:  Datei-Scan -->
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <select id="fileSelect">
-                    <option value="">-- Datei auswählen --</option>
+                    <option value="" data-i18n="select_file">-- Datei auswählen --</option>
                 </select>
                 <button id="scanFileButton" class="hidden" onclick="scanSelectedFile()" disabled>
-                    ▶️ Datei scannen
+                    ▶️ <span data-i18n="scan_file_button">Datei scannen</span>
                 </button>
             </div>
             
             <!-- Rechte Seite:  Sortierung -->
             <div style="display: flex; gap: 10px; align-items: center;">
                 <select id="sortSelect" aria-label="Sortierung auswählen">
-                    <option value="filename">Nach Dateiname</option>
-                    <option value="profile">Nach Medienformat</option>
+                    <option value="filename" data-i18n="sort_by_filename">Nach Dateiname</option>
+                    <option value="profile" data-i18n="sort_by_profile">Nach Medienformat</option>
                 </select>
             </div>
         </div>
@@ -53,17 +58,17 @@
         <table id="mediaTable">
             <thead>
                 <tr>
-                    <th>Poster / Dateiname</th>
-                    <th>HDR Format</th>
-                    <th>Auflösung</th>
-                    <th>Audiocodec</th>
+                    <th data-i18n="table_header_poster">Poster / Dateiname</th>
+                    <th data-i18n="table_header_hdr">HDR Format</th>
+                    <th data-i18n="table_header_resolution">Auflösung</th>
+                    <th data-i18n="table_header_audio">Audiocodec</th>
                 </tr>
             </thead>
             <tbody>
                 {% for file in files %}
                 {# Wir fügen data-Attribute hinzu, damit das JS die Sortierung nachvollziehen kann #}
                 <tr data-hdr-format="{{ file.hdr_format }}" data-hdr-detail="{{ file.hdr_detail }}" data-el-type="{{ file.el_type or '' }}">
-                    <td data-label="Poster / Dateiname" title="{{ file.filename }}">
+                    <td data-label-i18n="table_header_poster" data-label="Poster / Dateiname" title="{{ file.filename }}">
                         {% if file.poster_url %}
                         <div class="poster-container">
                             {% if file.tmdb_title %}
@@ -77,7 +82,7 @@
                         <span class="filename-fallback">{{ file.filename }}</span>
                         {% endif %}
                     </td>
-                    <td data-label="HDR Format">
+                    <td data-label-i18n="table_header_hdr" data-label="HDR Format">
                         {# Wenn Dolby Vision und el_type vorhanden -> ein kombiniertes Badge #}
                         {% if file.hdr_format == 'Dolby Vision' and file.el_type %}
                         <span class="hdr-badge hdr-dolby-vision el-{{ file.el_type.lower() }}">
@@ -94,16 +99,16 @@
                         {% endif %}
                         {% endif %}
                     </td>
-                    <td data-label="Auflösung" class="resolution">{{ file.resolution }}</td>
-                    <td data-label="Audiocodec" class="audio-codec">{{ file.audio_codec }}</td>
+                    <td data-label-i18n="table_header_resolution" data-label="Auflösung" class="resolution">{{ file.resolution }}</td>
+                    <td data-label-i18n="table_header_audio" data-label="Audiocodec" class="audio-codec">{{ file.audio_codec }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
         <div class="empty-state">
-            <h2>Keine Medien gefunden</h2>
-            <p>Lege Videodateien in den Ordner <code>media/</code>, um sie automatisch scannen zu lassen.</p>
+            <h2 data-i18n="empty_title">Keine Medien gefunden</h2>
+            <p data-i18n-html="empty_description">Lege Videodateien in den Ordner <code>media/</code>, um sie automatisch scannen zu lassen.</p>
         </div>
         {% endif %}
     </div>

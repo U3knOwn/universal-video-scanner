@@ -50,6 +50,7 @@ TEMPLATES_DIR = os.path.join(DATA_DIR, 'templates')
 STATIC_DIR = os.path.join(DATA_DIR, 'static')
 CSS_DIR = os.path.join(STATIC_DIR, 'css')
 JS_DIR = os.path.join(STATIC_DIR, 'js')
+LOCALE_DIR = os.path.join(STATIC_DIR, 'locale')
 
 # GitHub raw URLs for downloading static files
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/dovi-detector/main'
@@ -57,6 +58,8 @@ GITHUB_FILES = {
     'templates/index.html': os.path.join(TEMPLATES_DIR, 'index.html'),
     'static/css/style.css': os.path.join(CSS_DIR, 'style.css'),
     'static/js/main.js': os.path.join(JS_DIR, 'main.js'),
+    'static/locale/de.json': os.path.join(LOCALE_DIR, 'de.json'),
+    'static/locale/en.json': os.path.join(LOCALE_DIR, 'en.json'),
 }
 
 app = Flask(__name__,
@@ -81,6 +84,7 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
 os.makedirs(CSS_DIR, exist_ok=True)
 os.makedirs(JS_DIR, exist_ok=True)
+os.makedirs(LOCALE_DIR, exist_ok=True)
 os.makedirs(POSTER_CACHE_DIR, exist_ok=True)
 
 
