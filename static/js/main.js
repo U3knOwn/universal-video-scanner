@@ -71,11 +71,11 @@ function loadFileList() {
                 // enable scan for selected file when choosing
 				select.addEventListener('change', function() {
 					const scanBtn = document.getElementById('scanFileButton');
-					if (this. value) {
+					if (this.value) {
 						scanBtn.classList.remove('hidden');
 						scanBtn.disabled = false;
 					} else {
-						scanBtn.classList. add('hidden');
+						scanBtn.classList.add('hidden');
 						scanBtn.disabled = true;
 					}
 				});

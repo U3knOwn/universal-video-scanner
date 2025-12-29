@@ -35,8 +35,12 @@ TMDB_ID_PATTERN = re.compile(r'\{tmdb-(\d+)\}', re.IGNORECASE)
 YEAR_PATTERN = re.compile(r'\b(19|20)\d{2}\b')
 RESOLUTION_PATTERN = re.compile(r'\b(480|720|1080|2160)[pi]\b', re.IGNORECASE)
 CODEC_PATTERN = re.compile(r'\b(x264|x265|h264|h265|hevc)\b', re.IGNORECASE)
-SOURCE_PATTERN = re.compile(r'\b(BluRay|BRRip|WEBRip|WEB-DL|HDRip|DVDRip)\b', re.IGNORECASE)
-HDR_PATTERN = re.compile(r'\b(DV|HDR10\+?|HLG|SDR|Dolby[\.\s]?Vision)\b', re.IGNORECASE)
+SOURCE_PATTERN = re.compile(
+    r'\b(BluRay|BRRip|WEBRip|WEB-DL|HDRip|DVDRip)\b',
+    re.IGNORECASE)
+HDR_PATTERN = re.compile(
+    r'\b(DV|HDR10\+?|HLG|SDR|Dolby[\.\s]?Vision)\b',
+    re.IGNORECASE)
 BRACKET_PATTERN = re.compile(r'[\[\(].*?[\]\)]')
 SEPARATOR_PATTERN = re.compile(r'[._\-]')
 WHITESPACE_PATTERN = re.compile(r'\s+')
@@ -55,7 +59,7 @@ GITHUB_FILES = {
     'static/js/main.js': os.path.join(JS_DIR, 'main.js'),
 }
 
-app = Flask(__name__, 
+app = Flask(__name__,
             template_folder=TEMPLATES_DIR,
             static_folder=STATIC_DIR)
 
@@ -79,66 +83,68 @@ os.makedirs(CSS_DIR, exist_ok=True)
 os.makedirs(JS_DIR, exist_ok=True)
 os.makedirs(POSTER_CACHE_DIR, exist_ok=True)
 
+
 def download_static_files():
     """Download missing static files from GitHub"""
     missing_files = []
-    
+
     # Check which files are missing
     for github_path, local_path in GITHUB_FILES.items():
         if not os.path.exists(local_path):
             missing_files.append((github_path, local_path))
-    
+
     if not missing_files:
         print("✓ All static files present")
         return True
-    
+
     print(f"Downloading {len(missing_files)} missing file(s) from GitHub...")
-    
+
     for github_path, local_path in missing_files:
         try:
             url = f"{GITHUB_RAW_BASE}/{github_path}"
             print(f"  Downloading: {github_path}")
-            
+
             # Download file
             with urllib.request.urlopen(url) as response:
                 content = response.read()
-            
+
             # Save file
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
             with open(local_path, 'wb') as f:
                 f.write(content)
-            
+
             print(f"  ✓ Saved: {local_path}")
         except Exception as e:
             print(f"  ✗ Error downloading {github_path}: {e}")
             return False
-    
+
     print("✓ All static files downloaded successfully")
     return True
+
 
 def update_static_files():
     """Force update all static files from GitHub"""
     print("Updating all static files from GitHub...")
-    
+
     for github_path, local_path in GITHUB_FILES.items():
         try:
             url = f"{GITHUB_RAW_BASE}/{github_path}"
             print(f"  Updating: {github_path}")
-            
+
             # Download file
             with urllib.request.urlopen(url) as response:
                 content = response.read()
-            
+
             # Save file
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
             with open(local_path, 'wb') as f:
                 f.write(content)
-            
+
             print(f"  ✓ Updated: {local_path}")
         except Exception as e:
             print(f"  ✗ Error updating {github_path}: {e}")
             return False
-    
+
     print("✓ All static files updated successfully")
     return True
 
@@ -161,6 +167,8 @@ def cleanup_temp_directory():
         print(f"Error cleaning temp directory: {e}")
 
 # TMDB API Integration Functions
+
+
 def extract_tmdb_id(filename):
     """Extract TMDB ID from filename - pattern: {tmdb-12345}"""
     match = TMDB_ID_PATTERN.search(filename)
@@ -168,14 +176,15 @@ def extract_tmdb_id(filename):
         return match.group(1)
     return None
 
+
 def extract_movie_name(filename):
     """Extract movie name from filename for search fallback"""
     # Remove file extension
     name = os.path.splitext(filename)[0]
-    
+
     # Remove TMDB ID pattern if present
     name = TMDB_ID_PATTERN.sub('', name)
-    
+
     # Remove common patterns like year, quality, resolution, etc.
     name = YEAR_PATTERN.sub('', name)
     name = RESOLUTION_PATTERN.sub('', name)
@@ -183,34 +192,36 @@ def extract_movie_name(filename):
     name = SOURCE_PATTERN.sub('', name)
     name = HDR_PATTERN.sub('', name)
     name = BRACKET_PATTERN.sub('', name)
-    
+
     # Replace common separators with spaces
     name = SEPARATOR_PATTERN.sub(' ', name)
-    
+
     # Clean up multiple spaces
     name = WHITESPACE_PATTERN.sub(' ', name).strip()
-    
+
     return name
+
 
 def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
     """Fetch poster URL, title, and year from TMDB API by ID"""
     if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
         return None, None, None
-    
+
     # Validate tmdb_id is numeric
-    if not tmdb_id or not isinstance(tmdb_id, (str, int)) or not str(tmdb_id).isdigit():
+    if not tmdb_id or not isinstance(
+            tmdb_id, (str, int)) or not str(tmdb_id).isdigit():
         print(f"Invalid TMDB ID: {tmdb_id}")
         return None, None, None
-    
+
     try:
         url = f'https://api.themoviedb.org/3/{media_type}/{tmdb_id}'
         params = {'api_key': TMDB_API_KEY}
-        
+
         response = requests.get(url, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
             poster_path = data.get('poster_path')
-            
+
             # Extract title and year based on media type
             if media_type == 'movie':
                 title = data.get('title')
@@ -218,46 +229,50 @@ def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
             else:  # TV show
                 title = data.get('name')
                 release_date = data.get('first_air_date', '')
-            
+
             # Extract year (first 4 characters) from release date
-            year = release_date[:4] if release_date and len(release_date) >= 4 else None
-            
+            year = release_date[:4] if release_date and len(
+                release_date) >= 4 else None
+
             if poster_path:
                 poster_url = f'https://image.tmdb.org/t/p/w185{poster_path}'
                 return poster_url, title, year
         elif response.status_code != 404:
-            print(f"TMDB API error for ID {tmdb_id}: HTTP {response.status_code}")
+            print(
+                f"TMDB API error for ID {tmdb_id}: HTTP {
+                    response.status_code}")
     except requests.exceptions.Timeout:
         print(f"TMDB API timeout for ID {tmdb_id}")
     except requests.exceptions.RequestException as e:
         print(f"TMDB API request error for ID {tmdb_id}: {e}")
     except Exception as e:
         print(f"Error fetching TMDB poster by ID {tmdb_id}: {e}")
-    
+
     return None, None, None
+
 
 def search_tmdb_poster(movie_name, media_type='movie'):
     """Search TMDB for movie/tv show and return poster URL, title, and year"""
     if not TMDB_API_KEY or not REQUESTS_AVAILABLE or not movie_name:
         return None, None, None
-    
+
     # Validate and sanitize movie_name
     if not isinstance(movie_name, str):
         return None, None, None
-    
+
     # Trim and validate length
     movie_name = movie_name.strip()
     if len(movie_name) < 1 or len(movie_name) > 200:
         print(f"Invalid movie name length: {len(movie_name)}")
         return None, None, None
-    
+
     try:
         url = f'https://api.themoviedb.org/3/search/{media_type}'
         params = {
             'api_key': TMDB_API_KEY,
             'query': movie_name
         }
-        
+
         response = requests.get(url, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
@@ -266,7 +281,7 @@ def search_tmdb_poster(movie_name, media_type='movie'):
                 # Get first result
                 first_result = results[0]
                 poster_path = first_result.get('poster_path')
-                
+
                 # Extract title and year based on media type
                 if media_type == 'movie':
                     title = first_result.get('title')
@@ -274,29 +289,33 @@ def search_tmdb_poster(movie_name, media_type='movie'):
                 else:  # TV show
                     title = first_result.get('name')
                     release_date = first_result.get('first_air_date', '')
-                
+
                 # Extract year (first 4 characters) from release date
-                year = release_date[:4] if release_date and len(release_date) >= 4 else None
-                
+                year = release_date[:4] if release_date and len(
+                    release_date) >= 4 else None
+
                 if poster_path:
                     poster_url = f'https://image.tmdb.org/t/p/w185{poster_path}'
                     return poster_url, title, year
         elif response.status_code != 404:
-            print(f"TMDB API search error for '{movie_name}': HTTP {response.status_code}")
+            print(
+                f"TMDB API search error for '{movie_name}': HTTP {
+                    response.status_code}")
     except requests.exceptions.Timeout:
         print(f"TMDB API timeout searching for '{movie_name}'")
     except requests.exceptions.RequestException as e:
         print(f"TMDB API request error searching for '{movie_name}': {e}")
     except Exception as e:
         print(f"Error searching TMDB for '{movie_name}': {e}")
-    
+
     return None, None, None
+
 
 def get_tmdb_poster(filename):
     """Main function: Try ID first, then fallback to name search. Returns (tmdb_id, poster_url, title, year)"""
     if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
         return None, None, None, None
-    
+
     # Try to extract TMDB ID first
     tmdb_id = extract_tmdb_id(filename)
     if tmdb_id:
@@ -311,7 +330,7 @@ def get_tmdb_poster(filename):
         if poster_url:
             print(f"  [TMDB] Poster found by ID (TV): {poster_url}")
             return tmdb_id, poster_url, title, year
-    
+
     # Fallback: Search by name
     movie_name = extract_movie_name(filename)
     if movie_name:
@@ -326,7 +345,7 @@ def get_tmdb_poster(filename):
         if poster_url:
             print(f"  [TMDB] Poster found by search (TV): {poster_url}")
             return None, poster_url, title, year
-    
+
     print(f"  [TMDB] No poster found for: {filename}")
     return None, None, None, None
 
@@ -335,13 +354,14 @@ def is_valid_tmdb_url(url):
     """Validate URL is from TMDB to prevent SSRF attacks"""
     if not url:
         return False
-    
+
     try:
         parsed = urlparse(url)
         # Check scheme is https
         if parsed.scheme != 'https':
             return False
-        # Check hostname is exactly image.tmdb.org (not a subdomain or similar domain)
+        # Check hostname is exactly image.tmdb.org (not a subdomain or similar
+        # domain)
         if parsed.netloc != 'image.tmdb.org':
             return False
         # Check path starts with /t/p/
@@ -356,19 +376,19 @@ def download_and_cache_poster(poster_url, cache_filename):
     """Download poster image and cache it locally"""
     if not poster_url:
         return None
-    
+
     # Validate URL is from TMDB to prevent SSRF attacks
     if not is_valid_tmdb_url(poster_url):
         print(f"  [CACHE] Invalid poster URL (not from TMDB): {poster_url}")
         return poster_url
-    
+
     cache_path = os.path.join(POSTER_CACHE_DIR, cache_filename)
-    
+
     # Check if already cached
     if os.path.exists(cache_path):
         print(f"  [CACHE] Poster already cached: {cache_filename}")
         return f'/poster/{cache_filename}'
-    
+
     try:
         print(f"  [CACHE] Downloading poster: {poster_url}")
         response = requests.get(poster_url, timeout=10)
@@ -384,7 +404,7 @@ def download_and_cache_poster(poster_url, cache_filename):
         print(f"  [CACHE] Error downloading poster: {e}")
     except Exception as e:
         print(f"  [CACHE] Unexpected error caching poster: {e}")
-    
+
     # Return original URL as fallback
     return poster_url
 
@@ -393,7 +413,7 @@ def get_cached_poster_path(tmdb_id, poster_url):
     """Get cached poster path or download and cache it"""
     if not poster_url:
         return None
-    
+
     # Generate cache filename from TMDB ID or URL
     if tmdb_id:
         cache_filename = f"tmdb_{tmdb_id}.jpg"
@@ -401,7 +421,7 @@ def get_cached_poster_path(tmdb_id, poster_url):
         # Extract filename from URL using hash
         url_hash = hashlib.md5(poster_url.encode()).hexdigest()
         cache_filename = f"poster_{url_hash}.jpg"
-    
+
     return download_and_cache_poster(poster_url, cache_filename)
 
 
@@ -420,27 +440,30 @@ def load_database():
         scanned_files = {}
         scanned_paths = set()
 
+
 def migrate_poster_urls_to_cache():
     """Migrate existing TMDB poster URLs to cached versions"""
     global scanned_files
-    
+
     if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
         return
-    
+
     migrated_count = 0
     with scan_lock:
         for file_path, file_info in scanned_files.items():
             poster_url = file_info.get('poster_url')
             tmdb_id = file_info.get('tmdb_id')
-            
+
             # Check if poster URL is a TMDB URL (not cached)
             if poster_url and is_valid_tmdb_url(poster_url):
-                print(f"  [MIGRATION] Caching poster for: {file_info.get('filename')}")
+                print(
+                    f"  [MIGRATION] Caching poster for: {
+                        file_info.get('filename')}")
                 cached_path = get_cached_poster_path(tmdb_id, poster_url)
                 if cached_path and cached_path.startswith('/poster/'):
                     file_info['poster_url'] = cached_path
                     migrated_count += 1
-        
+
         if migrated_count > 0:
             save_database()
             print(f"✓ Migrated {migrated_count} poster(s) to cache")
@@ -457,22 +480,23 @@ def save_database():
     except Exception as e:
         print(f"Error saving database: {e}")
 
+
 def cleanup_database():
     """Remove entries from database for files that no longer exist"""
     global scanned_files, scanned_paths
-    
+
     removed_count = 0
     paths_to_remove = []
-    
+
     # Get list of paths to check (with lock)
     with scan_lock:
         paths_to_check = list(scanned_files.keys())
-    
+
     # Check which files no longer exist (outside lock to avoid blocking)
     for file_path in paths_to_check:
         if not os.path.exists(file_path):
             paths_to_remove.append(file_path)
-    
+
     # Remove non-existent files from database (with lock)
     if paths_to_remove:
         with scan_lock:
@@ -481,12 +505,14 @@ def cleanup_database():
                     del scanned_files[file_path]
                     scanned_paths.discard(file_path)
                     removed_count += 1
-                    print(f"✗ Removed from database (file not found): {file_path}")
-            
+                    print(
+                        f"✗ Removed from database (file not found): {file_path}")
+
             if removed_count > 0:
                 save_database()
-    
+
     return removed_count
+
 
 def extract_dovi_metadata(video_file):
     """
@@ -495,7 +521,7 @@ def extract_dovi_metadata(video_file):
     """
     rpu_path = None
     ffmpeg_proc = None
-    
+
     try:
         # Extract first second of video
         ffmpeg_cmd = [
@@ -525,16 +551,18 @@ def extract_dovi_metadata(video_file):
             capture_output=True,
             timeout=30
         )
-        
+
         # Wait for ffmpeg to complete
         if ffmpeg_proc:
             ffmpeg_proc.wait(timeout=30)
 
         # Check if RPU file was created and has content
         if not os.path.exists(rpu_path):
-            print(f"  [DV] No RPU file created for {os.path.basename(video_file)}")
+            print(
+                f"  [DV] No RPU file created for {
+                    os.path.basename(video_file)}")
             return None
-            
+
         if os.path.getsize(rpu_path) == 0:
             print(f"  [DV] Empty RPU file for {os.path.basename(video_file)}")
             return None
@@ -548,25 +576,31 @@ def extract_dovi_metadata(video_file):
 
         if dovi_info.returncode != 0:
             stderr = dovi_info.stderr.decode('utf-8', errors='ignore')
-            print(f"  [DV] dovi_tool info failed for {os.path.basename(video_file)}: {stderr}")
+            print(
+                f"  [DV] dovi_tool info failed for {
+                    os.path.basename(video_file)}: {stderr}")
             return None
 
         # Parse output
         output = dovi_info.stdout.decode('utf-8')
-        
+
         # The output format is: first line is summary, rest is JSON
         lines = output.strip().split('\n')
         if len(lines) < 2:
-            print(f"  [DV] Unexpected dovi_tool output format for {os.path.basename(video_file)}")
+            print(
+                f"  [DV] Unexpected dovi_tool output format for {
+                    os.path.basename(video_file)}")
             return None
-            
+
         json_data = '\n'.join(lines[1:])
         metadata = json.loads(json_data)
-        
+
         profile = metadata.get('dovi_profile')
         el_type = metadata.get('el_type', '').upper()
-        
-        print(f"  [DV] Dolby Vision detected: Profile {profile}, EL Type: {el_type or 'None'}")
+
+        print(
+            f"  [DV] Dolby Vision detected: Profile {profile}, EL Type: {
+                el_type or 'None'}")
 
         return {
             'profile': profile,
@@ -580,7 +614,9 @@ def extract_dovi_metadata(video_file):
         print(f"  [DV] Failed to parse dovi_tool JSON output: {e}")
         return None
     except Exception as e:
-        print(f"  [DV] Dolby Vision extraction error for {os.path.basename(video_file)}: {e}")
+        print(
+            f"  [DV] Dolby Vision extraction error for {
+                os.path.basename(video_file)}: {e}")
         return None
     finally:
         # Clean up temp file
@@ -589,7 +625,7 @@ def extract_dovi_metadata(video_file):
                 os.remove(rpu_path)
         except Exception as e:
             print(f"  [DV] Failed to remove temp file {rpu_path}: {e}")
-        
+
         # Ensure ffmpeg process is terminated
         try:
             if ffmpeg_proc and ffmpeg_proc.poll() is None:
@@ -606,7 +642,7 @@ def detect_hdr_format(video_file):
     """
     try:
         print(f"[HDR] Analyzing: {os.path.basename(video_file)}")
-        
+
         # --- Step 1: Dolby Vision ---
         dovi = extract_dovi_metadata(video_file)
         if dovi:
@@ -629,7 +665,11 @@ def detect_hdr_format(video_file):
             '-of', 'json',
             video_file
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=15)
         if result.returncode == 0:
             try:
                 data = json.loads(result.stdout)
@@ -638,7 +678,9 @@ def detect_hdr_format(video_file):
                     side_data = streams[0].get('side_data_list', [])
                     for sd in side_data:
                         sd_type = sd.get('side_data_type', '').lower()
-                        if sd_type in ['hdr10+ metadata', 'hdr dynamic metadata smpte2094-40']:
+                        if sd_type in [
+                            'hdr10+ metadata',
+                                'hdr dynamic metadata smpte2094-40']:
                             print(f"  -> HDR10+ detected (side_data)")
                             return {
                                 'format': 'HDR10+',
@@ -656,10 +698,20 @@ def detect_hdr_format(video_file):
             '-show_streams',
             video_file
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=15)
         if result.returncode == 0:
             output_lower = result.stdout.lower()
-            if any(indicator in output_lower for indicator in ['hdr10+', 'hdr10plus', 'smpte st 2094', 'smpte2094', 'smpte-st-2094']):
+            if any(
+                indicator in output_lower for indicator in [
+                    'hdr10+',
+                    'hdr10plus',
+                    'smpte st 2094',
+                    'smpte2094',
+                    'smpte-st-2094']):
                 print(f"  -> HDR10+ detected (fallback text search)")
                 return {
                     'format': 'HDR10+',
@@ -676,7 +728,11 @@ def detect_hdr_format(video_file):
             '-of', 'json',
             video_file
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=15)
         if result.returncode == 0:
             data = json.loads(result.stdout)
             streams = data.get('streams', [])
@@ -689,7 +745,12 @@ def detect_hdr_format(video_file):
                 print(f"  color_primaries: '{color_primaries}'")
 
                 # HDR10 uses PQ (SMPTE2084) + BT.2020
-                if any(indicator in color_transfer for indicator in ['smpte2084', 'smpte 2084', 'smpte-2084', 'pq']):
+                if any(
+                    indicator in color_transfer for indicator in [
+                        'smpte2084',
+                        'smpte 2084',
+                        'smpte-2084',
+                        'pq']):
                     print(f"  -> HDR10 detected")
                     return {
                         'format': 'HDR10',
@@ -699,7 +760,12 @@ def detect_hdr_format(video_file):
                     }
 
                 # HLG (Hybrid Log-Gamma)
-                if any(indicator in color_transfer for indicator in ['arib-std-b67', 'arib std b67', 'hlg', 'hybrid log-gamma']):
+                if any(
+                    indicator in color_transfer for indicator in [
+                        'arib-std-b67',
+                        'arib std b67',
+                        'hlg',
+                        'hybrid log-gamma']):
                     print(f"  -> HLG detected")
                     return {
                         'format': 'HLG',
@@ -718,13 +784,16 @@ def detect_hdr_format(video_file):
         }
 
     except Exception as e:
-        print(f"[HDR] Error detecting HDR format for {os.path.basename(video_file)}: {e}")
+        print(
+            f"[HDR] Error detecting HDR format for {
+                os.path.basename(video_file)}: {e}")
         return {
             'format': 'Unknown',
             'detail': 'Unknown',
             'profile': 'Unknown',
             'el_type': ''
         }
+
 
 def get_video_resolution(video_file):
     """Get video resolution using ffprobe and return friendly name"""
@@ -736,14 +805,18 @@ def get_video_resolution(video_file):
             '-of', 'json',
             video_file
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10)
         if result.returncode == 0:
             data = json.loads(result.stdout)
             if 'streams' in data and len(data['streams']) > 0:
                 stream = data['streams'][0]
                 width = stream.get('width', 0)
                 height = stream.get('height', 0)
-                
+
                 # Map resolution to friendly names
                 if width == 3840 and height == 2160:
                     return "2160p"
@@ -769,6 +842,7 @@ def get_video_resolution(video_file):
         print(f"Error getting resolution: {e}")
     return "Unknown"
 
+
 def get_channel_format(channels):
     """Convert channel count to standard format string"""
     try:
@@ -785,59 +859,69 @@ def get_channel_format(channels):
     except (ValueError, TypeError):
         return ""
 
+
 def get_audio_info_mediainfo(video_file):
     """Get audio information using MediaInfo"""
     try:
         cmd = ['mediainfo', '--Output=JSON', video_file]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10)
         if result.returncode == 0:
             data = json.loads(result.stdout)
             if data.get('media') and 'track' in data['media']:
-                audio_tracks = [track for track in data['media']['track'] if track.get('@type') == 'Audio']
+                audio_tracks = [track for track in data['media']
+                                ['track'] if track.get('@type') == 'Audio']
                 if audio_tracks:
                     return audio_tracks
     except Exception as e:
         print(f"Error getting audio info from MediaInfo: {e}")
     return None
 
+
 def get_audio_codec(video_file):
     """Get audio codec with detailed profile info, preferring German (ger/deu) tracks"""
-    # Try MediaInfo first for better format detection (especially Atmos and DTS:X)
+    # Try MediaInfo first for better format detection (especially Atmos and
+    # DTS:X)
     audio_tracks = get_audio_info_mediainfo(video_file)
     if audio_tracks:
         # Try to find German audio track first
         german_track = None
         first_track = None
-        
+
         for track in audio_tracks:
             language = track.get('Language', '').lower()
-            
+
             if first_track is None:
                 first_track = track
-            
+
             if language in ['ger', 'deu', 'de', 'german']:
                 german_track = track
                 break
-        
+
         # Use German track if found, otherwise first track
         selected_track = german_track if german_track else first_track
-        
+
         if selected_track:
             # Extract format information from MediaInfo
-            format_commercial = selected_track.get('Format_Commercial_IfAny', '')
+            format_commercial = selected_track.get(
+                'Format_Commercial_IfAny', '')
             format_name = selected_track.get('Format', '')
             format_profile = selected_track.get('Format_Profile', '')
-            format_additional = selected_track.get('Format_AdditionalFeatures', '')
+            format_additional = selected_track.get(
+                'Format_AdditionalFeatures', '')
             title = selected_track.get('Title', '')
             channels = selected_track.get('Channels', '')
-            
+
             # Get channel format string
             channel_str = get_channel_format(channels)
             channel_suffix = f" {channel_str}" if channel_str else ""
-            
+
             # Check for IMAX in title
             is_imax = 'imax' in title.lower()
-            
+
             # Detect formats using MediaInfo's commercial names and format details
             # Dolby Atmos detection
             if 'Dolby Atmos' in format_commercial or 'Atmos' in format_commercial:
@@ -849,17 +933,18 @@ def get_audio_codec(video_file):
                     return f'Dolby Digital{channel_suffix} (Atmos)'
                 else:
                     return f'Dolby Atmos{channel_suffix}'
-            
+
             # DTS:X detection - check multiple fields before DTS-HD MA
-            # Check format_commercial, format_name, format_additional, and title
-            if ('DTS:X' in format_commercial or 'DTS-X' in format_commercial or 
+            # Check format_commercial, format_name, format_additional, and
+            # title
+            if ('DTS:X' in format_commercial or 'DTS-X' in format_commercial or
                 'DTS XLL X' in format_name or 'XLL X' in format_name or
                 'DTS:X' in format_additional or
-                'DTS:X' in title or 'DTS-X' in title):
+                    'DTS:X' in title or 'DTS-X' in title):
                 if is_imax:
                     return f'DTS:X (IMAX){channel_suffix}'
                 return f'DTS:X{channel_suffix}'
-            
+
             # Standard format detection based on Format field
             if format_name == 'MLP FBA' or 'TrueHD' in format_name:
                 return f'Dolby TrueHD{channel_suffix}'
@@ -890,55 +975,64 @@ def get_audio_codec(video_file):
             elif format_name == 'PCM':
                 return f'PCM{channel_suffix}'
             else:
-                # Return the format name if we didn't match any specific pattern
+                # Return the format name if we didn't match any specific
+                # pattern
                 codec_name = format_name if format_name else 'Unknown'
                 return f'{codec_name}{channel_suffix}'
-    
+
     # Fallback to ffprobe if MediaInfo failed
     try:
         cmd = [
-            'ffprobe', '-v', 'error',
-            '-select_streams', 'a',
-            '-show_entries', 'stream=index,codec_name,profile,channels:stream_tags=language,title',
-            '-of', 'json',
-            video_file
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            'ffprobe',
+            '-v',
+            'error',
+            '-select_streams',
+            'a',
+            '-show_entries',
+            'stream=index,codec_name,profile,channels:stream_tags=language,title',
+            '-of',
+            'json',
+            video_file]
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10)
         if result.returncode == 0:
             data = json.loads(result.stdout)
             if 'streams' in data and len(data['streams']) > 0:
                 # Try to find German audio track first
                 german_stream = None
                 first_stream = None
-                
+
                 for stream in data['streams']:
                     tags = stream.get('tags', {})
                     language = tags.get('language', '').lower()
-                    
+
                     if first_stream is None:
                         first_stream = stream
-                    
+
                     if language in ['ger', 'deu', 'de']:
                         german_stream = stream
                         break
-                
+
                 # Use German track if found, otherwise first track
                 selected_stream = german_stream if german_stream else first_stream
-                
+
                 codec_name = selected_stream.get('codec_name', 'Unknown')
                 profile = selected_stream.get('profile', '').lower()
                 channels = selected_stream.get('channels', 0)
                 tags = selected_stream.get('tags', {})
                 title = tags.get('title', '').lower()
-                
+
                 # Get channel format string
                 channel_str = get_channel_format(channels)
                 channel_suffix = f" {channel_str}" if channel_str else ""
-                
+
                 # Detect Atmos from title or profile
                 is_atmos = 'atmos' in title or 'atmos' in profile
                 is_imax = 'imax' in title
-                
+
                 # Format codec name with detailed profile information
                 if codec_name == 'ac3':
                     return f'Dolby Digital{channel_suffix}'
@@ -980,6 +1074,7 @@ def get_audio_codec(video_file):
         print(f"Error getting audio codec from ffprobe: {e}")
     return "Unknown"
 
+
 def scan_video_file(file_path):
     """Scan a video file and extract all metadata"""
     print(f"Scanning: {file_path}")
@@ -994,11 +1089,11 @@ def scan_video_file(file_path):
     hdr_info = detect_hdr_format(file_path)
     resolution = get_video_resolution(file_path)
     audio_codec = get_audio_codec(file_path)
-    
+
     # Get TMDB poster, title, and year
     filename = os.path.basename(file_path)
     tmdb_id, poster_url, tmdb_title, tmdb_year = get_tmdb_poster(filename)
-    
+
     # Cache the poster if we got a URL
     cached_poster_path = None
     if poster_url:
@@ -1032,12 +1127,13 @@ def scan_video_file(file_path):
         'file_info': file_info
     }
 
+
 def scan_directory(directory):
     """Scan directory for video files"""
     if not os.path.exists(directory):
         print(f"Directory does not exist: {directory}")
         return []
-    
+
     new_files = []
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -1046,30 +1142,32 @@ def scan_directory(directory):
                 file_path = os.path.join(root, file)
                 if file_path not in scanned_paths:
                     new_files.append(file_path)
-    
+
     return new_files
+
 
 def background_scan_new_files():
     """Background task to scan new files"""
     new_files = scan_directory(MEDIA_PATH)
     print(f"Found {len(new_files)} new files to scan")
-    
+
     for file_path in new_files:
         try:
             scan_video_file(file_path)
         except Exception as e:
             print(f"Error scanning {file_path}: {e}")
 
+
 class MediaFileHandler(FileSystemEventHandler):
     """Handle file system events for automatic scanning"""
-    
+
     def on_created(self, event):
         if event.is_directory:
             return
-        
+
         file_path = event.src_path
         ext = os.path.splitext(file_path)[1].lower()
-        
+
         if ext in SUPPORTED_FORMATS:
             print(f"New file detected: {file_path}")
             time.sleep(FILE_WRITE_DELAY)
@@ -1077,15 +1175,15 @@ class MediaFileHandler(FileSystemEventHandler):
                 scan_video_file(file_path)
             except Exception as e:
                 print(f"Error scanning new file {file_path}: {e}")
-    
+
     def on_deleted(self, event):
         """Handle file deletion - remove from database"""
         if event.is_directory:
             return
-        
+
         file_path = event.src_path
         ext = os.path.splitext(file_path)[1].lower()
-        
+
         if ext in SUPPORTED_FORMATS:
             print(f"File deletion detected: {file_path}")
             with scan_lock:
@@ -1095,12 +1193,13 @@ class MediaFileHandler(FileSystemEventHandler):
                     save_database()
                     print(f"✗ Removed from database: {file_path}")
 
+
 def start_file_observer():
     """Start watchdog observer for automatic file scanning"""
     if not os.path.exists(MEDIA_PATH):
         print(f"Creating media directory: {MEDIA_PATH}")
         os.makedirs(MEDIA_PATH, exist_ok=True)
-    
+
     event_handler = MediaFileHandler()
     observer = Observer()
     observer.schedule(event_handler, MEDIA_PATH, recursive=True)
@@ -1108,30 +1207,32 @@ def start_file_observer():
     print(f"File observer started for: {MEDIA_PATH}")
     return observer
 
+
 @app.route('/')
 def index():
     """Main page showing scanned files"""
     files_list = list(scanned_files.values())
     # Sort by filename
     files_list.sort(key=lambda x: x['filename'])
-    
-    return render_template('index.html', 
-                         files=files_list,
-                         file_count=len(files_list),
-                         auto_refresh_interval=AUTO_REFRESH_INTERVAL)
+
+    return render_template('index.html',
+                           files=files_list,
+                           file_count=len(files_list),
+                           auto_refresh_interval=AUTO_REFRESH_INTERVAL)
+
 
 @app.route('/scan', methods=['POST'])
 def manual_scan():
     """Endpoint for manual scan trigger"""
     try:
         initial_count = len(scanned_files)
-        
+
         # Clean up database for non-existent files
         removed_count = cleanup_database()
-        
+
         # Scan for new files
         new_files = scan_directory(MEDIA_PATH)
-        
+
         # Scan each new file
         scanned_new_count = 0
         for file_path in new_files:
@@ -1141,9 +1242,9 @@ def manual_scan():
                     scanned_new_count += 1
             except Exception as e:
                 print(f"Error scanning {file_path}: {e}")
-        
+
         final_count = len(scanned_files)
-        
+
         return jsonify({
             'success': True,
             'new_files': scanned_new_count,
@@ -1155,6 +1256,7 @@ def manual_scan():
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/get_files', methods=['GET'])
 def get_files():
@@ -1173,10 +1275,10 @@ def get_files():
                         'name': relative_path,
                         'scanned': is_scanned
                     })
-        
+
         # Sort by name
         all_files.sort(key=lambda x: x['name'])
-        
+
         return jsonify({
             'success': True,
             'files': all_files
@@ -1187,28 +1289,29 @@ def get_files():
             'error': str(e)
         }), 500
 
+
 @app.route('/scan_file', methods=['POST'])
 def scan_single_file():
     """Endpoint to scan a specific file"""
     try:
         data = request.get_json()
         file_path = data.get('file_path')
-        
+
         if not file_path:
             return jsonify({
                 'success': False,
                 'error': 'No file path provided'
             }), 400
-        
+
         if not os.path.exists(file_path):
             return jsonify({
                 'success': False,
                 'error': 'File not found'
             }), 404
-        
+
         # Scan the file
         result = scan_video_file(file_path)
-        
+
         if result:
             return jsonify({
                 'success': True,
@@ -1225,6 +1328,7 @@ def scan_single_file():
             'success': False,
             'error': str(e)
         }), 500
+
 
 @app.route('/update_assets', methods=['POST'])
 def update_assets():
@@ -1247,6 +1351,7 @@ def update_assets():
             'error': str(e)
         }), 500
 
+
 @app.route('/poster/<filename>')
 def serve_poster(filename):
     """Serve cached poster images"""
@@ -1256,19 +1361,20 @@ def serve_poster(filename):
         if not re.match(r'^[a-zA-Z0-9_-]+\.jpg$', filename):
             print(f"Invalid poster filename: {filename}")
             return "Invalid filename", 400
-        
+
         # Prevent directory traversal
         if '..' in filename or '/' in filename or '\\' in filename:
             print(f"Path traversal attempt detected: {filename}")
             return "Invalid filename", 400
-        
+
         poster_path = os.path.join(POSTER_CACHE_DIR, filename)
-        
+
         # Verify the resolved path is still within POSTER_CACHE_DIR
-        if not os.path.abspath(poster_path).startswith(os.path.abspath(POSTER_CACHE_DIR)):
+        if not os.path.abspath(poster_path).startswith(
+                os.path.abspath(POSTER_CACHE_DIR)):
             print(f"Path traversal attempt detected: {filename}")
             return "Invalid filename", 400
-        
+
         if os.path.exists(poster_path):
             return send_file(poster_path, mimetype='image/jpeg')
         else:
@@ -1277,36 +1383,37 @@ def serve_poster(filename):
         print(f"Error serving poster {filename}: {e}")
         return "Error serving poster", 500
 
+
 def main():
     """Main application entry point"""
     print("=" * 50)
     print("Starting Universal HDR Video Scanner")
     print("=" * 50)
-    
+
     # Check and download static files if needed
     print("Checking static files...")
     if not download_static_files():
         print("Warning: Failed to download some static files")
-    
+
     # Clean up any orphaned temporary files from previous runs
     cleanup_temp_directory()
-    
+
     # Load existing database
     load_database()
-    
+
     # Migrate existing poster URLs to cached versions
     if TMDB_API_KEY:
         print("Migrating poster URLs to cache...")
         migrate_poster_urls_to_cache()
-    
+
     # Clean up database for non-existent files
     removed_count = cleanup_database()
     if removed_count > 0:
         print(f"Cleaned up {removed_count} entries for non-existent files")
-    
+
     # Start file observer in background
     observer = start_file_observer()
-    
+
     # Start initial scan automatically in background
     threading.Thread(target=background_scan_new_files, daemon=True).start()
     print("Initial scan started...")
@@ -1320,6 +1427,7 @@ def main():
         observer.join()
         # Clean up temp directory on shutdown
         cleanup_temp_directory()
+
 
 if __name__ == '__main__':
     main()
