@@ -99,8 +99,7 @@ async function toggleLanguage() {
     }
 }
 
-// Bestehende Funktionen (startManualScan, loadFileList, scanSelectedFile) bleiben erhalten.
-// Ich erweitere das Script um Sortier-Logik und Initialisierung.
+// Manual scan, file list loading, and file scanning functions
 
 function startManualScan() {
     const button = document.getElementById('scanButton');
@@ -156,24 +155,18 @@ function loadFileList() {
         .then(data => {
             if (data.success) {
                 const select = document.getElementById('fileSelect');
-                // Clear existing options and add translated placeholder
-                const placeholderOption = document.createElement('option');
-                placeholderOption.value = '';
-                placeholderOption.textContent = t('select.fileSelect');
-                placeholderOption.setAttribute('data-i18n', 'select.fileSelect');
-                select.innerHTML = '';
-                select.appendChild(placeholderOption);
+                // Build options array
+                const options = [`<option value="" data-i18n="select.fileSelect">${t('select.fileSelect')}</option>`];
                 
                 // Add files to dropdown
                 data.files.forEach(file => {
-                    const option = document.createElement('option');
-                    option.value = file.path;
-                    option.textContent = file.name + (file.scanned ? ' ✓' : '');
-                    if (file.scanned) {
-                        option.style.color = '#4ecca3';
-                    }
-                    select.appendChild(option);
+                    const checked = file.scanned ? ' ✓' : '';
+                    const color = file.scanned ? ' style="color: #4ecca3"' : '';
+                    options.push(`<option value="${file.path}"${color}>${file.name}${checked}</option>`);
                 });
+                
+                // Set innerHTML once
+                select.innerHTML = options.join('');
 
                 // enable scan for selected file when choosing
 				select.addEventListener('change', function() {

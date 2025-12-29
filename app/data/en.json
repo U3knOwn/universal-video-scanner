@@ -1,7 +1,8 @@
 {
   "title": "DoVi Detector",
   "ariaLabels": {
-    "switchLanguage": "Switch language"
+    "switchLanguage": "Switch language",
+    "selectSort": "Select sort order"
   },
   "stats": {
     "media": "Media"

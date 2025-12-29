@@ -26,6 +26,7 @@ except ImportError:
 MEDIA_PATH = os.environ.get('MEDIA_PATH', '/media')
 DATA_DIR = '/app/data'
 TEMP_DIR = '/app/temp'
+LANG_DIR_DEV = 'app/data'  # Development path for language files
 DB_FILE = os.path.join(DATA_DIR, 'scanned_files.json')
 POSTER_CACHE_DIR = os.path.join(DATA_DIR, 'posters')
 TMDB_API_KEY = os.environ.get('TMDB_API_KEY', '')
@@ -1400,8 +1401,8 @@ def get_language(lang):
         # Try multiple paths: development path first, then Docker path
         lang_filename = f'{lang}.json'
         possible_paths = [
-            os.path.join('app/data', lang_filename),  # Development
-            os.path.join(DATA_DIR, lang_filename),    # Docker/Production
+            os.path.join(LANG_DIR_DEV, lang_filename),  # Development
+            os.path.join(DATA_DIR, lang_filename),      # Docker/Production
         ]
         
         lang_file = None
