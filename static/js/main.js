@@ -48,6 +48,12 @@ function applyTranslations() {
         if (translations[key]) el.setAttribute('data-label', translations[key]);
     });
     
+    // Aria labels
+    document.querySelectorAll('[data-aria-label-i18n]').forEach(el => {
+        const key = el.getAttribute('data-aria-label-i18n');
+        if (translations[key]) el.setAttribute('aria-label', translations[key]);
+    });
+    
     updateLanguageButtons();
 }
 
