@@ -3,49 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal HDR Video Scanner</title>
+    <title>DoVi Detector</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎬 Universal HDR Video Scanner</h1>
-            <p class="subtitle">SDR • HDR10 • HDR10+ • HLG • Dolby Vision (alle Profile)</p>
+            <h1>🎬 DoVi Detector</h1>
         </header>
         
         <div class="controls">
             <div class="stats">
-                Gescannte Medien: <strong id="fileCount">{{ file_count }}</strong>
+                Medien: <strong id="fileCount">{{ file_count }}</strong>
             </div>
             <div class="button-group">
                 <div class="loading" id="loadingIndicator">
                     <div class="spinner"></div>
-                    <span>Scanne Dateien...</span>
+                    <span>Scanne...</span>
                 </div>
                 <button id="scanButton" onclick="startManualScan()">
-                    🔍 Alle nicht gescannten Medien scannen
+                    🔍 Alle Medien scannen
                 </button>
             </div>
         </div>
         
-        <div class="controls" style="margin-top: 10px;">
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <label for="fileSelect" style="color: #a0a0a0;">Einzelne Datei scannen:</label>
-                <select id="fileSelect">
-                    <option value="">-- Datei auswählen --</option>
-                </select>
-                <button id="scanFileButton" onclick="scanSelectedFile()" disabled>
-                    ▶️ Ausgewählte Datei scannen
-                </button>
-
-                <!-- Neuer Dropdown: Sortierungsauswahl -->
-                <label for="sortSelect" style="color: #a0a0a0; margin-left: 12px;">Sortierung:</label>
-                <select id="sortSelect" aria-label="Sortierung auswählen">
-                    <option value="filename">Dateiname</option>
-                    <option value="profile">Profile</option>
-                </select>
-            </div>
-        </div>
+		<div class="controls" style="margin-top: 10px;">
+			<!-- Linke Seite:  Datei-Scan -->
+			<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+				<select id="fileSelect">
+					<option value="">-- Datei auswählen --</option>
+				</select>
+				<button id="scanFileButton" class="hidden" onclick="scanSelectedFile()" disabled>
+					▶️ Datei scannen
+				</button>
+			</div>
+			
+			<!-- Rechte Seite:  Sortierung -->
+			<div style="display:  flex; gap: 10px; align-items: center;">
+				<select id="sortSelect" aria-label="Sortierung auswählen">
+					<option value="filename">Nach Dateiname</option>
+					<option value="profile">Nach Medienformat</option>
+				</select>
+			</div>
+		</div>
         
         <div id="message" class="message"></div>
         
@@ -56,7 +56,7 @@
                     <th>Poster / Dateiname</th>
                     <th>HDR Format</th>
                     <th>Auflösung</th>
-                    <th>Audio Codec</th>
+                    <th>Audiocodec</th>
                 </tr>
             </thead>
             <tbody>
@@ -95,7 +95,7 @@
                         {% endif %}
                     </td>
                     <td data-label="Auflösung" class="resolution">{{ file.resolution }}</td>
-                    <td data-label="Audio Codec" class="audio-codec">{{ file.audio_codec }}</td>
+                    <td data-label="Audiocodec" class="audio-codec">{{ file.audio_codec }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -746,23 +746,23 @@ def get_video_resolution(video_file):
                 
                 # Map resolution to friendly names
                 if width == 3840 and height == 2160:
-                    return "4K (UHD)"
+                    return "2160p"
                 elif width == 1920 and height == 1080:
-                    return "Full HD (1080p)"
+                    return "1080p"
                 elif width == 1280 and height == 720:
-                    return "HD (720p)"
+                    return "720p"
                 elif width == 7680 and height == 4320:
-                    return "8K (UHD)"
+                    return "4320p"
                 elif width == 2560 and height == 1440:
-                    return "QHD (1440p)"
+                    return "1440p"
                 elif width == 4096 and height == 2160:
                     return "4K DCI"
                 elif width == 1366 and height == 768:
-                    return "HD (768p)"
+                    return "768p"
                 elif width == 854 and height == 480:
-                    return "SD (480p)"
+                    return "480p"
                 elif width == 640 and height == 480:
-                    return "SD (480p)"
+                    return "480p"
                 else:
                     return f"{width}x{height}"
     except Exception as e:
@@ -842,11 +842,11 @@ def get_audio_codec(video_file):
             # Dolby Atmos detection
             if 'Dolby Atmos' in format_commercial or 'Atmos' in format_commercial:
                 if 'TrueHD' in format_name or 'TrueHD' in format_commercial:
-                    return f'Dolby TrueHD (Atmos){channel_suffix}'
+                    return f'Dolby TrueHD{channel_suffix} (Atmos)'
                 elif 'E-AC-3' in format_name or 'E-AC-3' in format_commercial:
-                    return f'Dolby Digital Plus (Atmos){channel_suffix}'
+                    return f'Dolby Digital Plus{channel_suffix} (Atmos)'
                 elif 'AC-3' in format_name:
-                    return f'Dolby Digital (Atmos){channel_suffix}'
+                    return f'Dolby Digital{channel_suffix} (Atmos)'
                 else:
                     return f'Dolby Atmos{channel_suffix}'
             

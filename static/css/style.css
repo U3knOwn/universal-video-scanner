@@ -64,51 +64,20 @@ h1 {
     flex-wrap: wrap;
 }
 
-#scanButton, #scanFileButton {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: #1f2937; /* dunkel (gleiche Basisfarbe wie Selects) */
-    color: #e6eef6;
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    border-radius: 10px;
-    transition: all 160ms ease;
-    cursor: pointer;
-    min-height: 40px;
-    line-height: 1;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+/* Button initial verstecken */
+#scanFileButton.hidden {
+    display:  none;
 }
 
-#scanButton:hover:not(:disabled), #scanFileButton:hover:not(:disabled) {
-    transform: translateY(-2px);
+/* Oder mit Animation */
+#scanFileButton {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-#scanButton:disabled, #scanFileButton:disabled {
-    background: #555;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-#fileSelect {
-    background: rgba(0, 0, 0, 0.3);
-    color: #e0e0e0;
-    border: 2px solid #4ecca3;
-    padding: 10px 15px;
-    font-size: 1em;
-    border-radius: 10px;
-    cursor: pointer;
-    min-width: 300px;
-    max-width: 500px;
-}
-
-#fileSelect option {
-    background: #2d2d44;
-    color: #e0e0e0;
+#scanFileButton.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .spinner {
@@ -164,6 +133,10 @@ th {
     text-transform: uppercase;
     font-size: 0.9em;
     letter-spacing: 1px;
+}
+
+thead th:first-child {
+    text-align: center;
 }
 
 td {
@@ -250,12 +223,10 @@ tbody tr:hover {
 
 .resolution {
     color: #4ecca3;
-    font-weight: bold;
 }
 
 .audio-codec {
-    color: #e0e0e0;
-    font-size: 0.9em;
+    color: #4ecca3;
 }
 
 .poster-img {
@@ -320,7 +291,7 @@ tbody tr:hover {
     background-color: #1f2937; /* dunkel */
     color: #e6eef6;
     border: 1px solid rgba(255,255,255,0.06);
-    padding: 8px 38px 8px 12px;
+    padding: 10px 10px 10px 10px;
     font-size: 0.95rem;
     border-radius: 10px;
     box-shadow: 0 4px 14px rgba(2,6,23,0.45);
@@ -328,26 +299,16 @@ tbody tr:hover {
     cursor: pointer;
     min-height: 40px;
     line-height: 1;
+	text-align: center;
 }
 
 /* Platzierung / Größeanpassung in der control‑Leiste */
 .controls select#fileSelect {
-    max-width: 420px;
-    width: min(48vw, 420px);
+    width: 220px;
 }
 
 .controls select#sortSelect {
-    width: 160px;
-}
-
-#fileSelect,
-#sortSelect {
-    background-image:
-        linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.02)),
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6' fill='none' stroke='%23e6eef6' stroke-width='2' stroke-linecap='round' stro[...]");
-    background-repeat: no-repeat;
-    background-position: calc(100% - 12px) center;
-    background-size: 16px 16px;
+    width: 220px;
 }
 
 /* Hover / Fokus Effekte */
@@ -398,6 +359,7 @@ tbody tr:hover {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+	width: 220px;
 }
 
 /* Optional: kleine Icons oder Emojis innerhalb Buttons skalieren */
@@ -519,9 +481,13 @@ tbody tr:hover {
     }
     
     #scanButton, #scanFileButton {
-        width: 100%;
-        padding: 15px;
+        width: 220px;
     }
+	
+	/* Button verstecken - global mit !important damit es überall funktioniert */
+	#scanFileButton.hidden {
+		display:  none !important;
+	}
     
     #fileSelect {
         width: 100%;

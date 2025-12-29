@@ -69,10 +69,16 @@ function loadFileList() {
                 });
 
                 // enable scan for selected file when choosing
-                select.addEventListener('change', function() {
-                    const scanBtn = document.getElementById('scanFileButton');
-                    scanBtn.disabled = !this.value;
-                });
+				select.addEventListener('change', function() {
+					const scanBtn = document.getElementById('scanFileButton');
+					if (this. value) {
+						scanBtn.classList.remove('hidden');
+						scanBtn.disabled = false;
+					} else {
+						scanBtn.classList. add('hidden');
+						scanBtn.disabled = true;
+					}
+				});
             }
         })
         .catch(error => {
