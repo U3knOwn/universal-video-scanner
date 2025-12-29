@@ -97,8 +97,40 @@
                         {% endif %}
                         {% endif %}
                     </td>
-                    <td data-label-i18n="table_header_resolution" class="resolution">{{ file.resolution }}</td>
-                    <td data-label-i18n="table_header_audio" class="audio-codec">{{ file.audio_codec }}</td>
+                    <td data-label-i18n="table_header_resolution" data-label="Auflösung">
+                        <span class="resolution-badge resolution-{{ file.resolution.lower().replace(' ', '-').replace('x', '-') }}">
+                            {{ file.resolution }}
+                        </span>
+                    </td>
+                    <td data-label-i18n="table_header_audio" data-label="Audiocodec">
+                        {% set audio_class = 'unknown' %}
+                        {% if 'TrueHD' in file.audio_codec and 'Atmos' in file.audio_codec %}
+                            {% set audio_class = 'truehd-atmos' %}
+                        {% elif 'DTS:X' in file.audio_codec or 'DTS-X' in file.audio_codec %}
+                            {% set audio_class = 'dtsx' %}
+                        {% elif 'TrueHD' in file.audio_codec %}
+                            {% set audio_class = 'truehd' %}
+                        {% elif 'DTS-HD MA' in file.audio_codec %}
+                            {% set audio_class = 'dts-hd-ma' %}
+                        {% elif 'DTS-HD HRA' in file.audio_codec %}
+                            {% set audio_class = 'dts-hd-hra' %}
+                        {% elif 'Digital Plus' in file.audio_codec and 'Atmos' in file.audio_codec %}
+                            {% set audio_class = 'ddplus-atmos' %}
+                        {% elif 'Digital Plus' in file.audio_codec %}
+                            {% set audio_class = 'ddplus' %}
+                        {% elif 'Dolby Digital' in file.audio_codec %}
+                            {% set audio_class = 'dolby-digital' %}
+                        {% elif 'DTS' in file.audio_codec %}
+                            {% set audio_class = 'dts' %}
+                        {% elif 'AAC' in file.audio_codec %}
+                            {% set audio_class = 'aac' %}
+                        {% elif 'FLAC' in file.audio_codec or 'PCM' in file.audio_codec %}
+                            {% set audio_class = 'lossless' %}
+                        {% endif %}
+                        <span class="audio-badge audio-{{ audio_class }}">
+                            {{ file.audio_codec }}
+                        </span>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

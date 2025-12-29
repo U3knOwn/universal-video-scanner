@@ -279,6 +279,120 @@ tbody tr:hover {
     color: white;
 }
 
+/* Resolution badge styles */
+.resolution-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.resolution-4320p {
+    background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+}
+
+.resolution-2160p {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.resolution-1440p {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+}
+
+.resolution-1080p {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.resolution-720p {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: white;
+}
+
+.resolution-480p {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.resolution-unknown {
+    background: #444;
+    color: #999;
+}
+
+/* Audio codec badge styles */
+.audio-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.audio-truehd-atmos {
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+    color: white;
+}
+
+.audio-dtsx {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    color: white;
+}
+
+.audio-truehd {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.audio-dts-hd-ma {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.audio-dts-hd-hra {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    color: white;
+}
+
+.audio-ddplus-atmos {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+}
+
+.audio-ddplus {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    color: white;
+}
+
+.audio-dolby-digital {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.audio-dts {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: white;
+}
+
+.audio-aac {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    color: white;
+}
+
+.audio-lossless {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.audio-unknown {
+    background: #444;
+    color: #999;
+}
+
+/* Kept for backward compatibility */
 .resolution {
     color: #4ecca3;
 }
@@ -762,6 +876,19 @@ tbody tr:hover {
     }
     
     .hdr-badge, .el-badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+    }
+    
+    .resolution-badge, .audio-badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+    }
+}
+
+/* Mobile responsiveness for badges on smaller screens */
+@media (max-width: 768px) {
+    .resolution-badge, .audio-badge {
         font-size: 0.8em;
         padding: 4px 8px;
     }
