@@ -79,7 +79,7 @@ async function setLanguage(lang) {
     const loaded = await loadTranslations(lang);
     if (loaded) {
         applyTranslations();
-        loadFileList(); // Dropdown aktualisieren
+        loadFileList(); // Update dropdown
     }
 }
 
@@ -91,8 +91,8 @@ async function initLanguage() {
     applyTranslations();
 }
 
-// Bestehende Funktionen (startManualScan, loadFileList, scanSelectedFile) bleiben erhalten.
-// Ich erweitere das Script um Sortier-Logik und Initialisierung.
+// Existing functions (startManualScan, loadFileList, scanSelectedFile) remain unchanged.
+// I extend the script with sorting logic and initialization.
 
 function startManualScan() {
     const button = document.getElementById('scanButton');
@@ -237,7 +237,7 @@ function scanSelectedFile() {
 }
 
 /* -------------------------------
-   Neue Sortier-Logik (client-side)
+   New Sorting Logic (client-side)
    ------------------------------- */
 
 // Real-time search function
@@ -281,7 +281,7 @@ function searchMedia() {
 }
 
 function getProfileRank(hdrFormat, hdrDetail, elType) {
-    // Normalisiere Strings
+    // Normalize strings
     const f = (hdrFormat || '').toLowerCase();
     const d = (hdrDetail || '').toLowerCase();
     const e = (elType || '').toLowerCase();
@@ -319,7 +319,7 @@ function getProfileRank(hdrFormat, hdrDetail, elType) {
 }
 
 function getFilenameFromRow(row) {
-    // Versuche mehrere Orte: title-Attribut, .poster-title, .filename-fallback
+    // Try multiple places: title attribute, .poster-title, .filename-fallback
     const td = row.querySelector('td[data-label="Poster / Dateiname"]');
     if (!td) return '';
     // title attribute on td
@@ -351,7 +351,7 @@ function sortTableByProfile() {
 
         if (aRank !== bRank) return aRank - bRank;
 
-        // Wenn gleiche Priorität, sekundär nach Dateiname sortieren
+        // If same priority, sort secondarily by filename
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
@@ -359,7 +359,7 @@ function sortTableByProfile() {
         return 0;
     });
 
-    // Reihenfolge im DOM aktualisieren
+    // Rearrange order in DOM
     rows.forEach(r => tbody.appendChild(r));
 }
 
@@ -395,13 +395,13 @@ function applySort(mode) {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize language first
     initLanguage().then(() => {
-        // Lade Dateiliste für Scan-Dropdown
+        // Load file list for scan dropdown
         loadFileList();
 
-        // Initiale Sortierung anwenden
+        // Apply initial sorting
         applySort();
 
-        // Listener für Sortenauswahl
+        // Listener for sort selection
         const sortSelect = document.getElementById('sortSelect');
         if (sortSelect) {
             sortSelect.addEventListener('change', function() {
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Listener für Suchleiste
+        // Listener for search bar
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', searchMedia);

@@ -196,14 +196,14 @@ tbody tr:hover {
     color: white;
 }
 
-/* Spezifische Farben für kombinierte Dolby Vision + EL-Badges */
+/* Specific colors for combined Dolby Vision + EL badges */
 .hdr-dolby-vision.el-fel {
-    /* FEL: andere Farbe (z. B. türkis -> blau) */
+    /* FEL: different color (e.g., turquoise -> blue) */
     background: linear-gradient(135deg, #06b6d4 0%, #1283c7 100%);
     color: white;
 }
 .hdr-dolby-vision.el-mel {
-    /* MEL: andere Farbe (z. B. orange -> rot) */
+    /* MEL: different color (e.g., orange -> red) */
     background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
     color: white;
 }
@@ -305,7 +305,7 @@ tbody tr:hover {
 }
 
 /* -----------------------------
-   Verbesserte Styles für Dropdowns
+   Improved styles for dropdowns
    ----------------------------- */
 .select-enhanced {
     position: relative;
@@ -352,13 +352,13 @@ tbody tr:hover {
     color: rgba(230, 238, 246, 0.5);
 }
 
-/* Allgemeines Select‑Styling (für #fileSelect und #sortSelect) */
+/* General Select styling (for #fileSelect and #sortSelect) */
 #fileSelect,
 #sortSelect {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-color: #1f2937; /* dunkel */
+    background-color: #1f2937; /* dark */
     color: #e6eef6;
     border: 1px solid rgba(255,255,255,0.06);
     padding: 10px 10px 10px 10px;
@@ -372,7 +372,7 @@ tbody tr:hover {
     text-align: center;
 }
 
-/* Platzierung / Größeanpassung in der control‑Leiste */
+/* Placement / Size adjustment in the control bar */
 .controls select#fileSelect {
     width: 220px;
 }
@@ -381,7 +381,7 @@ tbody tr:hover {
     width: 220px;
 }
 
-/* Hover / Fokus Effekte */
+/* Hover / Focus Effects */
 #fileSelect:hover,
 #sortSelect:hover {
     transform: translateY(-1px);
@@ -391,11 +391,11 @@ tbody tr:hover {
 #fileSelect:focus,
 #sortSelect:focus {
     outline: none;
-    border-color: rgba(99,102,241,0.9); /* violett Akzent */
+    border-color: rgba(99,102,241,0.9); /* violet accent */
     box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
 }
 
-/* Disabled Zustand */
+/* Disabled state */
 #fileSelect:disabled,
 #sortSelect:disabled {
     opacity: 0.55;
@@ -405,7 +405,7 @@ tbody tr:hover {
 }
 
 /* -----------------------------
-   Einheitliches Button‑Styling (gleicher Look wie Dropdowns)
+   Unified button styling (same look as dropdowns)
    ----------------------------- */
 
 #scanButton,
@@ -414,7 +414,7 @@ tbody tr:hover {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-color: #1f2937; /* dunkel (gleiche Basisfarbe wie Selects) */
+    background-color: #1f2937; /* dark (same base color as selects) */
     color: #e6eef6;
     border: 1px solid rgba(255,255,255,0.06);
     padding: 10px 16px;
@@ -432,7 +432,7 @@ tbody tr:hover {
 	width: 220px;
 }
 
-/* Optional: kleine Icons oder Emojis innerhalb Buttons skalieren */
+/* Optional: scale small icons or emojis inside buttons */
 #scanButton img,
 #scanFileButton img,
 .button-group button img {
@@ -441,7 +441,7 @@ tbody tr:hover {
     display: inline-block;
 }
 
-/* Hover / Fokus Effekte (Match Select) */
+/* Hover / Focus Effects (Match Select) */
 #scanButton:hover,
 #scanFileButton:hover,
 .button-group button:hover {
@@ -453,11 +453,11 @@ tbody tr:hover {
 #scanFileButton:focus,
 .button-group button:focus {
     outline: none;
-    border-color: rgba(99,102,241,0.9); /* violett Akzent */
+    border-color: rgba(99,102,241,0.9); /* violet accent */
     box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
 }
 
-/* Disabled Zustand */
+/* Disabled state */
 #scanButton:disabled,
 #scanFileButton:disabled,
 .button-group button:disabled {
@@ -467,9 +467,9 @@ tbody tr:hover {
     box-shadow: none;
 }
 
-/* Spezielles Styling für die Loading-Anzeige (standardmäßig versteckt) */
+/* Special styling for the loading indicator (hidden by default) */
 .loading {
-    display: none;  /* WICHTIG: versteckt wenn nicht aktiv */
+    display: none;  /* IMPORTANT: hidden when not active */
     align-items: center;
     gap: 10px;
     background-color: transparent;
@@ -486,7 +486,7 @@ tbody tr:hover {
     box-shadow: 0 4px 10px rgba(2,6,23,0.35);
 }
 
-/* Spinner: kleiner und kontrastreich */
+/* Spinner: smaller and high contrast */
 .loading .spinner {
     width: 16px;
     height: 16px;
@@ -501,7 +501,7 @@ tbody tr:hover {
     to { transform: rotate(360deg); }
 }
 
-/* Responsive Anpassungen */
+/* Responsive adjustments */
 @media screen and (max-width: 640px) {
     #scanButton,
     #scanFileButton,
@@ -515,7 +515,7 @@ tbody tr:hover {
     }
 }
 
-/* Kleinere Bildschirme: responsive Breiten */
+/* Smaller screens: responsive widths */
 @media screen and (max-width: 640px) {
     #fileSelect {
         width: 100%;
@@ -560,7 +560,7 @@ tbody tr:hover {
         width: 220px;
     }
 	
-	/* Button verstecken - global mit !important damit es überall funktioniert */
+	/* Hide button - globally with !important so it works everywhere */
 	#scanFileButton.hidden {
 		display: none !important;
 	}
