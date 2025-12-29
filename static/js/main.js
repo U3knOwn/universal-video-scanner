@@ -57,6 +57,12 @@ function updatePageTranslations() {
         element.innerHTML = t(key);
     });
     
+    // Update aria-label attributes
+    document.querySelectorAll('[data-i18n-aria]').forEach(element => {
+        const key = element.getAttribute('data-i18n-aria');
+        element.setAttribute('aria-label', t(key));
+    });
+    
     // Update select options
     document.querySelectorAll('option[data-i18n]').forEach(option => {
         const key = option.getAttribute('data-i18n');
@@ -143,7 +149,7 @@ function startManualScan() {
         button.disabled = false;
         message.className = 'message';
         message.style.display = 'block';
-        message.textContent = t('messages.scanError', { error: error });
+        message.textContent = t('messages.scanError', { error: error.message || error.toString() });
     });
 }
 }
@@ -167,7 +173,6 @@ function loadFileList() {
                     const option = document.createElement('option');
                     option.value = file.path;
                     option.textContent = file.name + (file.scanned ? ' ✓' : '');
-                    option.setAttribute('data-i18n-skip', 'true'); // Don't translate file names
                     if (file.scanned) {
                         option.style.color = '#4ecca3';
                     }
@@ -245,7 +250,7 @@ function scanSelectedFile() {
         button.disabled = false;
         message.className = 'message';
         message.style.display = 'block';
-        message.textContent = t('messages.fileScanError', { error: error });
+        message.textContent = t('messages.fileScanError', { error: error.message || error.toString() });
     });
 }
 
