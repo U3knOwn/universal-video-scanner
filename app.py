@@ -7,16 +7,25 @@ import tempfile
 import threading
 import time
 import urllib.request
+import re
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    print("Warning: 'requests' module not available. TMDB integration disabled.")
 
 # Configuration
 MEDIA_PATH = os.environ.get('MEDIA_PATH', '/media')
 DATA_DIR = '/app/data'
 TEMP_DIR = '/app/temp'
 DB_FILE = os.path.join(DATA_DIR, 'scanned_files.json')
+TMDB_API_KEY = os.environ.get('TMDB_API_KEY', '')
 
 # Static files configuration
 TEMPLATES_DIR = os.path.join(DATA_DIR, 'templates')
@@ -135,6 +144,124 @@ def cleanup_temp_directory():
             print(f"Cleaned up temp directory: {TEMP_DIR}")
     except Exception as e:
         print(f"Error cleaning temp directory: {e}")
+
+# TMDB API Integration Functions
+def extract_tmdb_id(filename):
+    """Extract TMDB ID from filename - pattern: {tmdb-12345}"""
+    match = re.search(r'\{tmdb-(\d+)\}', filename, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
+def extract_movie_name(filename):
+    """Extract movie name from filename for search fallback"""
+    # Remove file extension
+    name = os.path.splitext(filename)[0]
+    
+    # Remove TMDB ID pattern if present
+    name = re.sub(r'\{tmdb-\d+\}', '', name, flags=re.IGNORECASE)
+    
+    # Remove common patterns like year, quality, resolution, etc.
+    name = re.sub(r'\b(19|20)\d{2}\b', '', name)  # Year
+    name = re.sub(r'\b(480|720|1080|2160)[pi]\b', '', name, flags=re.IGNORECASE)  # Resolution
+    name = re.sub(r'\b(x264|x265|h264|h265|hevc)\b', '', name, flags=re.IGNORECASE)  # Codecs
+    name = re.sub(r'\b(BluRay|BRRip|WEBRip|WEB-DL|HDRip|DVDRip)\b', '', name, flags=re.IGNORECASE)  # Source
+    name = re.sub(r'\b(DV|HDR10\+?|HLG|SDR|Dolby[.\s]?Vision)\b', '', name, flags=re.IGNORECASE)  # HDR formats
+    name = re.sub(r'\[.*?\]', '', name)  # Remove brackets
+    name = re.sub(r'\(.*?\)', '', name)  # Remove parentheses
+    
+    # Replace common separators with spaces
+    name = re.sub(r'[._\-]', ' ', name)
+    
+    # Clean up multiple spaces
+    name = re.sub(r'\s+', ' ', name).strip()
+    
+    return name
+
+def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
+    """Fetch poster URL from TMDB API by ID"""
+    if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
+        return None
+    
+    try:
+        url = f'https://api.themoviedb.org/3/{media_type}/{tmdb_id}'
+        params = {'api_key': TMDB_API_KEY}
+        
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            poster_path = data.get('poster_path')
+            if poster_path:
+                return f'https://image.tmdb.org/t/p/w185{poster_path}'
+    except Exception as e:
+        print(f"Error fetching TMDB poster by ID {tmdb_id}: {e}")
+    
+    return None
+
+def search_tmdb_poster(movie_name, media_type='movie'):
+    """Search TMDB for movie/tv show and return poster URL"""
+    if not TMDB_API_KEY or not REQUESTS_AVAILABLE or not movie_name:
+        return None
+    
+    try:
+        url = f'https://api.themoviedb.org/3/search/{media_type}'
+        params = {
+            'api_key': TMDB_API_KEY,
+            'query': movie_name
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            results = data.get('results', [])
+            if results:
+                # Get first result
+                poster_path = results[0].get('poster_path')
+                if poster_path:
+                    return f'https://image.tmdb.org/t/p/w185{poster_path}'
+    except Exception as e:
+        print(f"Error searching TMDB for '{movie_name}': {e}")
+    
+    return None
+
+def get_tmdb_poster(filename):
+    """Main function: Try ID first, then fallback to name search"""
+    if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
+        return None, None
+    
+    # Try to extract TMDB ID first
+    tmdb_id = extract_tmdb_id(filename)
+    if tmdb_id:
+        print(f"  [TMDB] Found TMDB ID: {tmdb_id}")
+        # Try movie first
+        poster_url = get_tmdb_poster_by_id(tmdb_id, 'movie')
+        if poster_url:
+            print(f"  [TMDB] Poster found by ID (movie): {poster_url}")
+            return tmdb_id, poster_url
+        # Try TV show
+        poster_url = get_tmdb_poster_by_id(tmdb_id, 'tv')
+        if poster_url:
+            print(f"  [TMDB] Poster found by ID (TV): {poster_url}")
+            return tmdb_id, poster_url
+    
+    # Fallback: Search by name
+    movie_name = extract_movie_name(filename)
+    if movie_name:
+        print(f"  [TMDB] Searching by name: '{movie_name}'")
+        # Try movie search first
+        poster_url = search_tmdb_poster(movie_name, 'movie')
+        if poster_url:
+            print(f"  [TMDB] Poster found by search (movie): {poster_url}")
+            return None, poster_url
+        # Try TV search
+        poster_url = search_tmdb_poster(movie_name, 'tv')
+        if poster_url:
+            print(f"  [TMDB] Poster found by search (TV): {poster_url}")
+            return None, poster_url
+    
+    print(f"  [TMDB] No poster found for: {filename}")
+    return None, None
+
 
 def load_database():
     """Load previously scanned files from database"""
@@ -699,16 +826,22 @@ def scan_video_file(file_path):
     hdr_info = detect_hdr_format(file_path)
     resolution = get_video_resolution(file_path)
     audio_codec = get_audio_codec(file_path)
+    
+    # Get TMDB poster
+    filename = os.path.basename(file_path)
+    tmdb_id, poster_url = get_tmdb_poster(filename)
 
     file_info = {
-        'filename': os.path.basename(file_path),
+        'filename': filename,
         'path': file_path,
         'hdr_format': hdr_info.get('format', 'Unknown'),
         'hdr_detail': hdr_info.get('detail', 'Unknown'),
         'profile': hdr_info.get('profile'),
         'el_type': hdr_info.get('el_type'),
         'resolution': resolution,
-        'audio_codec': audio_codec
+        'audio_codec': audio_codec,
+        'tmdb_id': tmdb_id,
+        'poster_url': poster_url
     }
 
     with scan_lock:
