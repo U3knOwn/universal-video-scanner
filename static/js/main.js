@@ -276,6 +276,93 @@ function searchMedia() {
         // Check if search term is in the searchable text
         row.style.display = searchableText.toLowerCase().includes(searchTerm) ? '' : 'none';
     });
+    
+    // Update clear button visibility
+    updateClearButton();
+    // Update profile stats based on visible rows
+    updateProfileStats();
+}
+
+// Clear search function
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    searchInput.value = '';
+    searchMedia(); // Re-run search to show all rows
+}
+
+// Update clear button visibility
+function updateClearButton() {
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+    if (clearBtn) {
+        clearBtn.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+    }
+}
+
+// Update profile statistics
+function updateProfileStats() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const visibleRows = rows.filter(row => row.style.display !== 'none');
+    
+    const stats = {
+        FEL: 0,
+        MEL: 0,
+        'HDR10+': 0,
+        'HDR10': 0,
+        'SDR': 0,
+        'HLG': 0
+    };
+    
+    visibleRows.forEach(row => {
+        const elType = (row.getAttribute('data-el-type') || '').toUpperCase();
+        const hdrFormat = (row.getAttribute('data-hdr-format') || '').toLowerCase();
+        const hdrDetail = (row.getAttribute('data-hdr-detail') || '').toLowerCase();
+        
+        // Check for FEL or MEL
+        if (elType === 'FEL') {
+            stats.FEL++;
+        } else if (elType === 'MEL') {
+            stats.MEL++;
+        } 
+        // Check for HDR10+ (must check before HDR10 to avoid false matches)
+        else if (hdrFormat.includes('hdr10+') || hdrDetail.includes('hdr10+') || 
+                 hdrFormat.includes('hdr10plus') || hdrDetail.includes('hdr10plus')) {
+            stats['HDR10+']++;
+        }
+        // Check for HDR10 (but not HDR10+) - explicitly exclude HDR10+
+        else if ((hdrFormat.includes('hdr10') || hdrDetail.includes('hdr10') || hdrFormat.includes('smpte2084')) &&
+                 !hdrFormat.includes('hdr10+') && !hdrDetail.includes('hdr10+') &&
+                 !hdrFormat.includes('hdr10plus') && !hdrDetail.includes('hdr10plus')) {
+            stats['HDR10']++;
+        }
+        // Check for HLG
+        else if (hdrFormat.includes('hlg') || hdrDetail.includes('hlg')) {
+            stats['HLG']++;
+        }
+        // Check for SDR
+        else if (hdrFormat.includes('sdr') || hdrDetail.includes('sdr')) {
+            stats['SDR']++;
+        }
+    });
+    
+    // Build stats string (only show profiles with at least 1 title)
+    const statsArray = [];
+    if (stats.FEL > 0) statsArray.push(`FEL: ${stats.FEL}`);
+    if (stats.MEL > 0) statsArray.push(`MEL: ${stats.MEL}`);
+    if (stats['HDR10+'] > 0) statsArray.push(`HDR10+: ${stats['HDR10+']}`);
+    if (stats['HDR10'] > 0) statsArray.push(`HDR10: ${stats['HDR10']}`);
+    if (stats['HLG'] > 0) statsArray.push(`HLG: ${stats['HLG']}`);
+    if (stats['SDR'] > 0) statsArray.push(`SDR: ${stats['SDR']}`);
+    
+    const profileStatsElement = document.getElementById('profileStats');
+    if (profileStatsElement && statsArray.length > 0) {
+        profileStatsElement.textContent = statsArray.join(' • ');
+    } else if (profileStatsElement) {
+        profileStatsElement.textContent = '';
+    }
 }
 
 function getProfileRank(hdrFormat, hdrDetail, elType) {
@@ -484,6 +571,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Apply initial sorting
         applySort();
+
+        // Update profile statistics on initial load
+        updateProfileStats();
+        
+        // Update clear button state on initial load
+        updateClearButton();
 
         // Listener for sort selection
         const sortSelect = document.getElementById('sortSelect');

@@ -16,6 +16,7 @@
             <div class="left-group">
                 <div class="search-container">
                     <input type="text" id="searchInput" data-i18n-placeholder="search_placeholder">
+                    <button id="clearSearch" class="clear-btn" onclick="clearSearch()" style="display: none;">✕</button>
                 </div>
 
                 <button id="scanButton" onclick="startManualScan()">
@@ -147,6 +148,7 @@
         <div class="controls" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
             <div class="stats">
                 <strong id="fileCount">{{ file_count }} <span data-i18n="media_count"></span></strong>
+                <span id="profileStats" style="margin-left: 15px; color: #a0a0a0;"></span>
             </div>
             <div class="language-switcher">
                 <select id="languageDropdown" onchange="setLanguage(this.value)">

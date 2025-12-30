@@ -464,6 +464,7 @@ tbody tr:hover {
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
 }
 
 #searchInput {
@@ -473,7 +474,7 @@ tbody tr:hover {
     background-color: #1f2937;
     color: #e6eef6;
     border: 1px solid rgba(255,255,255,0.06);
-    padding: 10px 16px;
+    padding: 10px 40px 10px 16px;
     font-size: 0.95rem;
     border-radius: 10px;
     box-shadow: 0 4px 14px rgba(2,6,23,0.45);
@@ -496,6 +497,30 @@ tbody tr:hover {
 
 #searchInput::placeholder {
     color: rgba(230, 238, 246, 0.5);
+}
+
+.clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #a0a0a0;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    transition: color 0.2s ease;
+    display: none;
+}
+
+.clear-btn:hover {
+    color: #e6eef6;
+}
+
+.clear-btn:focus {
+    outline: none;
 }
 
 #fileSelect,
