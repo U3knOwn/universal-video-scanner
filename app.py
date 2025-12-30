@@ -707,7 +707,7 @@ def detect_hdr_format(video_file):
         if dovi:
             profile = dovi.get('profile')
             el_type = dovi.get('el_type', '').upper()
-            detail = f'Profile {profile}'
+            detail = f'DV Profile {profile}'
             print(f"  -> Dolby Vision {detail}")
             return {
                 'format': 'Dolby Vision',
