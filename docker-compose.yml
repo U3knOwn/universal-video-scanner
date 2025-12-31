@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  dovi-detector:
+  universal-video-scanner:
     build: .
-    container_name: dovi-detector
+    container_name: universal-video-scanner
     ports:
       - "2367:2367"
     volumes:
