@@ -16,14 +16,14 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t dovi-detector:latest .
+          docker build -t universal-video-scanner:latest .
 
       - name: Save Docker image as .tar
         run: |
-          docker save dovi-detector:latest -o dovi-detector.tar
+          docker save universal-video-scanner:latest -o universal-video-scanner.tar
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dovi-detector-image
-          path: dovi-detector.tar
+          name: universal-video-scanner-image
+          path: universal-video-scanner.tar
