@@ -53,7 +53,7 @@ JS_DIR = os.path.join(STATIC_DIR, 'js')
 LOCALE_DIR = os.path.join(STATIC_DIR, 'locale')
 
 # GitHub raw URLs for downloading static files
-GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/dovi-detector/main'
+GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/universal-video-scanner/main'
 GITHUB_FILES = {
     'templates/index.html': os.path.join(TEMPLATES_DIR, 'index.html'),
     'static/css/style.css': os.path.join(CSS_DIR, 'style.css'),
