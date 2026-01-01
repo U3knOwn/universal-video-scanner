@@ -300,11 +300,18 @@ function searchMedia() {
             noResultsMsg = document.createElement('div');
             noResultsMsg.id = 'search-no-results';
             noResultsMsg.className = 'empty-state';
-            noResultsMsg.innerHTML = `<h2>${t('search_no_results')}</h2>`;
+            
+            const heading = document.createElement('h2');
+            heading.textContent = t('search_no_results');
+            noResultsMsg.appendChild(heading);
             
             // Insert after the table
             if (table && table.parentNode) {
-                table.parentNode.insertBefore(noResultsMsg, table.nextSibling);
+                if (table.nextSibling) {
+                    table.parentNode.insertBefore(noResultsMsg, table.nextSibling);
+                } else {
+                    table.parentNode.appendChild(noResultsMsg);
+                }
             }
         }
         noResultsMsg.style.display = 'block';
