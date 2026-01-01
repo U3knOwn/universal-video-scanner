@@ -243,6 +243,8 @@ function searchMedia() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const rows = document.querySelectorAll('#mediaTable tbody tr');
     
+    let visibleRowCount = 0;
+    
     rows.forEach(row => {
         // Get searchable content from specific cells only
         const posterCell = row.querySelector('td:nth-child(1)');
@@ -274,8 +276,53 @@ function searchMedia() {
         if (audioCell) searchableText += audioCell.textContent + ' ';
         
         // Check if search term is in the searchable text
-        row.style.display = searchableText.toLowerCase().includes(searchTerm) ? '' : 'none';
+        const isVisible = searchableText.toLowerCase().includes(searchTerm);
+        row.style.display = isVisible ? '' : 'none';
+        
+        if (isVisible) {
+            visibleRowCount++;
+        }
     });
+    
+    // Handle table header and no-results message visibility
+    const table = document.getElementById('mediaTable');
+    const thead = table ? table.querySelector('thead') : null;
+    
+    if (searchTerm && visibleRowCount === 0) {
+        // Hide table header when no results
+        if (thead) {
+            thead.style.display = 'none';
+        }
+        
+        // Show or create no-results message
+        let noResultsMsg = document.getElementById('search-no-results');
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'search-no-results';
+            noResultsMsg.className = 'empty-state';
+            
+            const heading = document.createElement('h2');
+            heading.textContent = t('search_no_results');
+            noResultsMsg.appendChild(heading);
+            
+            // Insert after the table
+            if (table && table.parentNode) {
+                table.parentNode.insertBefore(noResultsMsg, table.nextSibling);
+            }
+        }
+        noResultsMsg.style.display = 'block';
+    } else {
+        // Show table header when there are results or no search term
+        if (thead) {
+            thead.style.display = '';
+        }
+        
+        // Hide no-results message
+        const noResultsMsg = document.getElementById('search-no-results');
+        if (noResultsMsg) {
+            noResultsMsg.style.display = 'none';
+        }
+    }
     
     // Update clear button visibility
     updateClearButton();

@@ -20,6 +20,7 @@
   "scan_error": "Error while scanning",
   "file_scan_error": "Error while scanning file",
   "search_placeholder": "🔍 Search...",
+  "search_no_results": "No results found",
   "unknown": "Unknown",
   "dialog_duration": "Duration:",
   "dialog_file_size": "File Size:",
