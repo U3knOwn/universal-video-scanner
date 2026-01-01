@@ -158,18 +158,6 @@ function loadFileList() {
                     }
                     select.appendChild(option);
                 });
-
-                // enable scan for selected file when choosing
-				select.addEventListener('change', function() {
-					const scanBtn = document.getElementById('scanFileButton');
-					if (this.value) {
-						scanBtn.classList.remove('hidden');
-						scanBtn.disabled = false;
-					} else {
-						scanBtn.classList.add('hidden');
-						scanBtn.disabled = true;
-					}
-				});
             }
         })
         .catch(error => {
@@ -628,19 +616,35 @@ function sortTableByAudio() {
 }
 
 function sortTableByRating() {
+    sortTableByNumericAttribute('data-tmdb-rating');
+}
+
+function sortTableByFileSize() {
+    sortTableByNumericAttribute('data-file-size');
+}
+
+function sortTableByVideoBitrate() {
+    sortTableByNumericAttribute('data-video-bitrate');
+}
+
+function sortTableByAudioBitrate() {
+    sortTableByNumericAttribute('data-audio-bitrate');
+}
+
+function sortTableByNumericAttribute(attribute) {
     const table = document.getElementById('mediaTable');
     if (!table) return;
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
 
     rows.sort((a, b) => {
-        const aRating = parseFloat(a.getAttribute('data-tmdb-rating')) || 0;
-        const bRating = parseFloat(b.getAttribute('data-tmdb-rating')) || 0;
+        const aValue = parseFloat(a.getAttribute(attribute)) || 0;
+        const bValue = parseFloat(b.getAttribute(attribute)) || 0;
         
-        // Sort descending (highest rating first)
-        if (bRating !== aRating) return bRating - aRating;
+        // Sort descending (highest/largest first)
+        if (bValue !== aValue) return bValue - aValue;
         
-        // If same rating, sort secondarily by filename
+        // If same value, sort secondarily by filename
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
@@ -662,6 +666,12 @@ function applySort(mode) {
         sortTableByAudio();
     } else if (mode === 'rating') {
         sortTableByRating();
+    } else if (mode === 'filesize') {
+        sortTableByFileSize();
+    } else if (mode === 'videobitrate') {
+        sortTableByVideoBitrate();
+    } else if (mode === 'audiobitrate') {
+        sortTableByAudioBitrate();
     } else {
         sortTableByFilename();
     }
@@ -696,6 +706,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', searchMedia);
+        }
+        
+        // Listener for file select change
+        const fileSelect = document.getElementById('fileSelect');
+        if (fileSelect) {
+            fileSelect.addEventListener('change', function() {
+                const scanBtn = document.getElementById('scanFileButton');
+                if (this.value) {
+                    scanBtn.classList.remove('hidden');
+                    scanBtn.disabled = false;
+                } else {
+                    scanBtn.classList.add('hidden');
+                    scanBtn.disabled = true;
+                }
+            });
         }
         
         // Listener for Escape key to close dialog
