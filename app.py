@@ -270,6 +270,52 @@ def extract_title_and_year_from_tmdb(data, media_type):
     return title, year
 
 
+def get_tmdb_title_and_year_by_id(tmdb_id, media_type='movie'):
+    """Fetch only title and year from TMDB API by ID (without poster)"""
+    if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
+        return None, None
+
+    # Validate tmdb_id is numeric
+    if not tmdb_id or not isinstance(tmdb_id, (str, int)) or not str(tmdb_id).isdigit():
+        print(f"Invalid TMDB ID: {tmdb_id}")
+        return None, None
+
+    try:
+        url = f'https://api.themoviedb.org/3/{media_type}/{tmdb_id}'
+        
+        # Try configured language first
+        params = {'api_key': TMDB_API_KEY, 'language': CONTENT_LANGUAGE}
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            title, year = extract_title_and_year_from_tmdb(data, media_type)
+            if title:
+                return title, year
+        
+        # If configured language request failed, try English fallback
+        if CONTENT_LANGUAGE != 'en' and response.status_code != 200:
+            params = {'api_key': TMDB_API_KEY, 'language': 'en'}
+            response = requests.get(url, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                title, year = extract_title_and_year_from_tmdb(data, media_type)
+                if title:
+                    return title, year
+        
+        if response.status_code not in [200, 404]:
+            print(f"TMDB API error for ID {tmdb_id}: HTTP {response.status_code}")
+    except requests.exceptions.Timeout:
+        print(f"TMDB API timeout for ID {tmdb_id}")
+    except requests.exceptions.RequestException as e:
+        print(f"TMDB API request error for ID {tmdb_id}: {e}")
+    except Exception as e:
+        print(f"Error fetching TMDB title/year by ID {tmdb_id}: {e}")
+
+    return None, None
+
+
 def get_tmdb_poster_by_id(tmdb_id, media_type='movie'):
     """Fetch poster URL, title, and year from TMDB API by ID"""
     if not TMDB_API_KEY or not REQUESTS_AVAILABLE:
@@ -513,16 +559,37 @@ def get_fanart_poster_by_id(tmdb_id, media_type='movie'):
             if media_type == 'movie':
                 thumbs = data.get('moviethumb', [])
                 if thumbs:
-                    # Get the first thumb with highest likes (safely handle non-numeric likes)
+                    # Helper function to safely get likes
                     def get_likes(thumb):
                         try:
                             return int(thumb.get('likes', 0))
                         except (ValueError, TypeError):
                             return 0
+                    
+                    # Filter by preferred language first
+                    preferred_thumbs = [t for t in thumbs if t.get('lang', '').lower() == CONTENT_LANGUAGE]
+                    if preferred_thumbs:
+                        preferred_thumbs_sorted = sorted(preferred_thumbs, key=get_likes, reverse=True)
+                        thumb_url = preferred_thumbs_sorted[0].get('url')
+                        if thumb_url:
+                            print(f"  [FANART] Thumb poster found in {CONTENT_LANGUAGE}: {thumb_url}")
+                            return thumb_url
+                    
+                    # Fallback to English if no images in preferred language
+                    if CONTENT_LANGUAGE != 'en':
+                        en_thumbs = [t for t in thumbs if t.get('lang', '').lower() == 'en']
+                        if en_thumbs:
+                            en_thumbs_sorted = sorted(en_thumbs, key=get_likes, reverse=True)
+                            thumb_url = en_thumbs_sorted[0].get('url')
+                            if thumb_url:
+                                print(f"  [FANART] Thumb poster found in en (fallback): {thumb_url}")
+                                return thumb_url
+                    
+                    # Final fallback: all images sorted by likes
                     thumbs_sorted = sorted(thumbs, key=get_likes, reverse=True)
                     thumb_url = thumbs_sorted[0].get('url')
                     if thumb_url:
-                        print(f"  [FANART] Thumb poster found: {thumb_url}")
+                        print(f"  [FANART] Thumb poster found (any language): {thumb_url}")
                         return thumb_url
         
         if response.status_code not in [200, 404]:
@@ -1324,9 +1391,18 @@ def scan_video_file(file_path):
     tmdb_year = None
     
     if IMAGE_SOURCE == 'fanart':
-        # Use Fanart.tv
+        # Use Fanart.tv for poster
         tmdb_id, poster_url = get_fanart_poster(filename)
-        # Note: Fanart.tv doesn't provide title/year, so we keep them as None
+        # Fetch title and year from TMDB if we have a TMDB ID and API key
+        if tmdb_id and TMDB_API_KEY:
+            print(f"  [TMDB] Fetching title/year for Fanart.tv poster...")
+            # Try movie first
+            tmdb_title, tmdb_year = get_tmdb_title_and_year_by_id(tmdb_id, 'movie')
+            if not tmdb_title:
+                # Try TV show
+                tmdb_title, tmdb_year = get_tmdb_title_and_year_by_id(tmdb_id, 'tv')
+            if tmdb_title:
+                print(f"  [TMDB] Title/year found: {tmdb_title} ({tmdb_year})")
     else:
         # Use TMDB (default)
         tmdb_id, poster_url, tmdb_title, tmdb_year = get_tmdb_poster(filename)
