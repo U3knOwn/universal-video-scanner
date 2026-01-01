@@ -457,15 +457,18 @@ def get_fanart_poster_by_id(tmdb_id, media_type='movie'):
     if not FANART_API_KEY or not REQUESTS_AVAILABLE:
         return None
 
-    # Validate tmdb_id is numeric
-    if not tmdb_id or not isinstance(
-            tmdb_id, (str, int)) or not str(tmdb_id).isdigit():
+    # Validate tmdb_id
+    if not tmdb_id:
+        print(f"Invalid TMDB ID for Fanart.tv: {tmdb_id}")
+        return None
+    
+    if not isinstance(tmdb_id, (str, int)) or not str(tmdb_id).isdigit():
         print(f"Invalid TMDB ID for Fanart.tv: {tmdb_id}")
         return None
 
     try:
         if media_type == 'movie':
-            url = f'http://webservice.fanart.tv/v3/movies/{tmdb_id}'
+            url = f'https://webservice.fanart.tv/v3/movies/{tmdb_id}'
         else:  # TV show - Note: Fanart.tv uses TVDB ID for TV shows, not TMDB
             # For TV shows, we would need TVDB ID, which we don't have
             # So we'll return None for TV shows
@@ -482,8 +485,13 @@ def get_fanart_poster_by_id(tmdb_id, media_type='movie'):
             if media_type == 'movie':
                 thumbs = data.get('moviethumb', [])
                 if thumbs:
-                    # Get the first thumb with highest likes
-                    thumbs_sorted = sorted(thumbs, key=lambda x: int(x.get('likes', '0')), reverse=True)
+                    # Get the first thumb with highest likes (safely handle non-numeric likes)
+                    def get_likes(thumb):
+                        try:
+                            return int(thumb.get('likes', 0))
+                        except (ValueError, TypeError):
+                            return 0
+                    thumbs_sorted = sorted(thumbs, key=get_likes, reverse=True)
                     thumb_url = thumbs_sorted[0].get('url')
                     if thumb_url:
                         print(f"  [FANART] Thumb poster found: {thumb_url}")
