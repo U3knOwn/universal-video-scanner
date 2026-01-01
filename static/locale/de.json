@@ -8,6 +8,7 @@
   "sort_by_filename": "📁 Dateiname",
   "sort_by_profile": "🎞️ HDR-Typ",
   "sort_by_audio": "🔊 Tonspur",
+  "sort_by_rating": "⭐ Bewertung",
   "sort_label": "Sortierung auswählen",
   "table_header_poster": "Poster / Dateiname",
   "table_header_hdr": "HDR Format",
@@ -26,5 +27,6 @@
   "dialog_file_size": "Dateigröße:",
   "dialog_video_bitrate": "Videobitrate:",
   "dialog_audio_bitrate": "Audiobitrate:",
+  "dialog_plot": "Handlung:",
   "dialog_links": "Link:"
 }
