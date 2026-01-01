@@ -22,6 +22,7 @@
   "search_placeholder": "🔍 Suchen...",
   "unknown": "Unbekannt",
   "dialog_duration": "Laufzeit:",
+  "dialog_file_size": "Dateigröße:",
   "dialog_video_bitrate": "Videobitrate:",
   "dialog_audio_bitrate": "Audiobitrate:",
   "dialog_links": "Links:"

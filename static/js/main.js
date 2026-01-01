@@ -655,12 +655,29 @@ function formatDuration(seconds) {
     }
 }
 
-function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, tmdbId) {
+function formatFileSize(bytes) {
+    if (bytes === null || bytes === undefined || bytes < 0) return 'Unknown';
+    
+    // Always convert to GB
+    const GB_IN_BYTES = 1024 * 1024 * 1024;
+    const sizeInGB = bytes / GB_IN_BYTES;
+    
+    // Format with 1 decimal place and use appropriate decimal separator based on locale
+    const formattedSize = currentLang === 'de' 
+        ? sizeInGB.toFixed(1).replace('.', ',')  // German: comma
+        : sizeInGB.toFixed(1);                    // English: period
+    return `${formattedSize} GB`;
+}
+
+function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId) {
     const overlay = document.getElementById('mediaDialogOverlay');
     const dialogTitle = document.getElementById('dialogTitle');
     const dialogDuration = document.getElementById('dialogDuration');
+    const dialogFileSize = document.getElementById('dialogFileSize');
     const dialogVideoBitrate = document.getElementById('dialogVideoBitrate');
     const dialogAudioBitrate = document.getElementById('dialogAudioBitrate');
+    const dialogPoster = document.getElementById('dialogPoster');
+    const dialogPosterImg = document.getElementById('dialogPosterImg');
     const dialogTmdbLink = document.getElementById('dialogTmdbLink');
     
     // Set title with year if available
@@ -670,8 +687,23 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, tmdb
         dialogTitle.textContent = title;
     }
     
+    // Set poster image if available
+    if (posterUrl && posterUrl !== '') {
+        dialogPosterImg.src = posterUrl;
+        dialogPoster.style.display = 'block';
+    } else {
+        dialogPoster.style.display = 'none';
+    }
+    
     // Set duration
     dialogDuration.textContent = formatDuration(duration);
+    
+    // Set file size
+    if (fileSize !== null && fileSize !== undefined && fileSize >= 0) {
+        dialogFileSize.textContent = formatFileSize(fileSize);
+    } else {
+        dialogFileSize.textContent = 'Unknown';
+    }
     
     // Set video bitrate
     if (videoBitrate && videoBitrate > 0) {
@@ -717,9 +749,11 @@ function showMediaDialogFromData(element) {
     const duration = parseFloat(element.getAttribute('data-duration')) || null;
     const videoBitrate = parseInt(element.getAttribute('data-video-bitrate')) || null;
     const audioBitrate = parseInt(element.getAttribute('data-audio-bitrate')) || null;
+    const fileSize = parseInt(element.getAttribute('data-file-size')) || null;
+    const posterUrl = element.getAttribute('data-poster-url') || '';
     const tmdbId = element.getAttribute('data-tmdb-id') || '';
     
-    showMediaDialog(title, year, duration, videoBitrate, audioBitrate, tmdbId);
+    showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId);
 }
 
 function closeMediaDialog(event) {
