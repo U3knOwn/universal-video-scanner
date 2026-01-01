@@ -616,91 +616,36 @@ function sortTableByAudio() {
 }
 
 function sortTableByRating() {
-    const table = document.getElementById('mediaTable');
-    if (!table) return;
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-    rows.sort((a, b) => {
-        const aRating = parseFloat(a.getAttribute('data-tmdb-rating')) || 0;
-        const bRating = parseFloat(b.getAttribute('data-tmdb-rating')) || 0;
-        
-        // Sort descending (highest rating first)
-        if (bRating !== aRating) return bRating - aRating;
-        
-        // If same rating, sort secondarily by filename
-        const aName = getFilenameFromRow(a).toLowerCase();
-        const bName = getFilenameFromRow(b).toLowerCase();
-        if (aName < bName) return -1;
-        if (aName > bName) return 1;
-        return 0;
-    });
-
-    rows.forEach(r => tbody.appendChild(r));
+    sortTableByNumericAttribute('data-tmdb-rating', true);
 }
 
 function sortTableByFileSize() {
-    const table = document.getElementById('mediaTable');
-    if (!table) return;
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-    rows.sort((a, b) => {
-        const aSize = parseFloat(a.getAttribute('data-file-size')) || 0;
-        const bSize = parseFloat(b.getAttribute('data-file-size')) || 0;
-        
-        // Sort descending (largest first)
-        if (bSize !== aSize) return bSize - aSize;
-        
-        // If same size, sort secondarily by filename
-        const aName = getFilenameFromRow(a).toLowerCase();
-        const bName = getFilenameFromRow(b).toLowerCase();
-        if (aName < bName) return -1;
-        if (aName > bName) return 1;
-        return 0;
-    });
-
-    rows.forEach(r => tbody.appendChild(r));
+    sortTableByNumericAttribute('data-file-size', true);
 }
 
 function sortTableByVideoBitrate() {
-    const table = document.getElementById('mediaTable');
-    if (!table) return;
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-    rows.sort((a, b) => {
-        const aBitrate = parseFloat(a.getAttribute('data-video-bitrate')) || 0;
-        const bBitrate = parseFloat(b.getAttribute('data-video-bitrate')) || 0;
-        
-        // Sort descending (highest first)
-        if (bBitrate !== aBitrate) return bBitrate - aBitrate;
-        
-        // If same bitrate, sort secondarily by filename
-        const aName = getFilenameFromRow(a).toLowerCase();
-        const bName = getFilenameFromRow(b).toLowerCase();
-        if (aName < bName) return -1;
-        if (aName > bName) return 1;
-        return 0;
-    });
-
-    rows.forEach(r => tbody.appendChild(r));
+    sortTableByNumericAttribute('data-video-bitrate', true);
 }
 
 function sortTableByAudioBitrate() {
+    sortTableByNumericAttribute('data-audio-bitrate', true);
+}
+
+function sortTableByNumericAttribute(attribute, descending = false) {
     const table = document.getElementById('mediaTable');
     if (!table) return;
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
 
     rows.sort((a, b) => {
-        const aBitrate = parseFloat(a.getAttribute('data-audio-bitrate')) || 0;
-        const bBitrate = parseFloat(b.getAttribute('data-audio-bitrate')) || 0;
+        const aValue = parseFloat(a.getAttribute(attribute)) || 0;
+        const bValue = parseFloat(b.getAttribute(attribute)) || 0;
         
-        // Sort descending (highest first)
-        if (bBitrate !== aBitrate) return bBitrate - aBitrate;
+        // Sort by value (descending or ascending)
+        let comparison = descending ? bValue - aValue : aValue - bValue;
+        if (comparison !== 0) return comparison;
         
-        // If same bitrate, sort secondarily by filename
+        // If same value, sort secondarily by filename
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
