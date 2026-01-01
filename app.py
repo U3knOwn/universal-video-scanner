@@ -85,6 +85,7 @@ STATIC_DIR = os.path.join(DATA_DIR, 'static')
 CSS_DIR = os.path.join(STATIC_DIR, 'css')
 JS_DIR = os.path.join(STATIC_DIR, 'js')
 LOCALE_DIR = os.path.join(STATIC_DIR, 'locale')
+FONTS_DIR = os.path.join(STATIC_DIR, 'fonts')
 
 # GitHub raw URLs for downloading static files
 GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/universal-video-scanner/main'
@@ -94,6 +95,11 @@ GITHUB_FILES = {
     'static/js/main.js': os.path.join(JS_DIR, 'main.js'),
     'static/locale/de.json': os.path.join(LOCALE_DIR, 'de.json'),
     'static/locale/en.json': os.path.join(LOCALE_DIR, 'en.json'),
+    'static/fonts/inter.css': os.path.join(FONTS_DIR, 'inter.css'),
+    'static/fonts/Inter-Regular.woff2': os.path.join(FONTS_DIR, 'Inter-Regular.woff2'),
+    'static/fonts/Inter-Medium.woff2': os.path.join(FONTS_DIR, 'Inter-Medium.woff2'),
+    'static/fonts/Inter-SemiBold.woff2': os.path.join(FONTS_DIR, 'Inter-SemiBold.woff2'),
+    'static/fonts/Inter-Bold.woff2': os.path.join(FONTS_DIR, 'Inter-Bold.woff2'),
 }
 
 app = Flask(__name__,
@@ -122,6 +128,7 @@ os.makedirs(TEMPLATES_DIR, exist_ok=True)
 os.makedirs(CSS_DIR, exist_ok=True)
 os.makedirs(JS_DIR, exist_ok=True)
 os.makedirs(LOCALE_DIR, exist_ok=True)
+os.makedirs(FONTS_DIR, exist_ok=True)
 os.makedirs(POSTER_CACHE_DIR, exist_ok=True)
 
 
@@ -1685,6 +1692,7 @@ def scan_video_file(file_path):
     duration = get_video_duration(file_path)
     video_bitrate = get_video_bitrate(file_path)
     audio_bitrate = get_audio_bitrate(file_path)
+    file_size = os.path.getsize(file_path)
 
     # Get poster, title, and year based on IMAGE_SOURCE setting
     filename = os.path.basename(file_path)
@@ -1732,7 +1740,8 @@ def scan_video_file(file_path):
         'tmdb_rating': tmdb_rating,
         'duration': duration,
         'video_bitrate': video_bitrate,
-        'audio_bitrate': audio_bitrate
+        'audio_bitrate': audio_bitrate,
+        'file_size': file_size
     }
 
     with scan_lock:

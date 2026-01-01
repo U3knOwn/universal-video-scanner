@@ -567,6 +567,18 @@ tbody tr:hover {
     line-height: 1.4;
 }
 
+.dialog-poster {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dialog-poster-img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .dialog-info {
     display: flex;
     flex-direction: column;

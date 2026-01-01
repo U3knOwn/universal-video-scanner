@@ -77,6 +77,8 @@
                              data-duration="{{ file.duration|default('') }}"
                              data-video-bitrate="{{ file.video_bitrate|default('') }}"
                              data-audio-bitrate="{{ file.audio_bitrate|default('') }}"
+                             data-file-size="{{ file.file_size|default('') }}"
+                             data-poster-url="{{ file.poster_url|default('') }}"
                              data-tmdb-id="{{ file.tmdb_id|default('') }}"
                              onclick="showMediaDialogFromData(this)">
                             {% if file.tmdb_title %}
@@ -101,6 +103,8 @@
                               data-duration="{{ file.duration|default('') }}"
                               data-video-bitrate="{{ file.video_bitrate|default('') }}"
                               data-audio-bitrate="{{ file.audio_bitrate|default('') }}"
+                              data-file-size="{{ file.file_size|default('') }}"
+                              data-poster-url="{{ file.poster_url|default('') }}"
                               data-tmdb-id="{{ file.tmdb_id|default('') }}"
                               onclick="showMediaDialogFromData(this)">{{ file.filename }}</span>
                         {% endif %}
@@ -208,10 +212,17 @@
         <div class="media-dialog" onclick="event.stopPropagation()">
             <button class="dialog-close" onclick="closeMediaDialog(event)" aria-label="Close dialog">&times;</button>
             <h2 class="dialog-title" id="dialogTitle"></h2>
+            <div class="dialog-poster" id="dialogPoster" style="display: none;">
+                <img id="dialogPosterImg" class="dialog-poster-img" src="" alt="Poster">
+            </div>
             <div class="dialog-info">
                 <div class="dialog-info-item">
                     <span class="dialog-label" data-i18n="dialog_duration"></span>
                     <span class="dialog-value" id="dialogDuration"></span>
+                </div>
+                <div class="dialog-info-item">
+                    <span class="dialog-label" data-i18n="dialog_file_size"></span>
+                    <span class="dialog-value" id="dialogFileSize"></span>
                 </div>
                 <div class="dialog-info-item">
                     <span class="dialog-label" data-i18n="dialog_video_bitrate"></span>
