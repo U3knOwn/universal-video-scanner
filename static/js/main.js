@@ -541,6 +541,11 @@ function sortTableByProfileAudio() {
 
         if (aAudioRank !== bAudioRank) return aAudioRank - bAudioRank;
 
+        // Sort by channel count (descending - higher channels first)
+        const aChannels = getChannelCount(aAudio);
+        const bChannels = getChannelCount(bAudio);
+        if (aChannels !== bChannels) return bChannels - aChannels;
+
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
@@ -696,7 +701,7 @@ function getChannelCount(audioCodec) {
     const audio = (audioCodec || '').toLowerCase();
     
     // Match patterns like "7.1", "5.1", "2.0" that represent channel configurations
-    // Use word boundary or space before to avoid matching version numbers
+    // Require a space before the number to avoid matching version numbers
     const channelMatch = audio.match(/\s(\d+\.\d+)(?=\s|$|\()/);
     if (channelMatch) {
         // Convert to numeric value for proper sorting
