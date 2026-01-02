@@ -14,6 +14,7 @@ import config
 
 # Import utility functions
 from utils.file_utils import download_static_files, update_static_files, cleanup_temp_directory
+from utils.i18n import translate, get_request_language
 
 # Import service modules
 from services import database
@@ -144,19 +145,22 @@ def get_files():
 def scan_single_file():
     """Endpoint to scan a specific file"""
     try:
+        # Get user's preferred language
+        lang = get_request_language(request)
+        
         data = request.get_json()
         file_path = data.get('file_path')
 
         if not file_path:
             return jsonify({
                 'success': False,
-                'error': 'No file path provided'
+                'error': translate('api_no_file_path_provided', lang)
             }), 400
 
         if not os.path.exists(file_path):
             return jsonify({
                 'success': False,
-                'error': 'File not found'
+                'error': translate('api_file_not_found', lang)
             }), 404
 
         # Scan the file
@@ -165,13 +169,13 @@ def scan_single_file():
         if result:
             return jsonify({
                 'success': True,
-                'message': f'File scanned successfully',
+                'message': translate('api_file_scanned_successfully', lang),
                 'file_info': result
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'File was not Profile 7 or already scanned'
+                'message': translate('api_file_not_profile_or_scanned', lang)
             })
     except Exception as e:
         return jsonify({
@@ -184,16 +188,19 @@ def scan_single_file():
 def update_assets():
     """Endpoint to manually trigger asset updates"""
     try:
+        # Get user's preferred language
+        lang = get_request_language(request)
+        
         success = update_static_files(config.GITHUB_RAW_BASE, config.GITHUB_FILES)
         if success:
             return jsonify({
                 'success': True,
-                'message': 'All assets updated successfully'
+                'message': translate('api_assets_updated_successfully', lang)
             })
         else:
             return jsonify({
                 'success': False,
-                'error': 'Failed to update some assets'
+                'error': translate('api_failed_to_update_assets', lang)
             }), 500
     except Exception as e:
         return jsonify({

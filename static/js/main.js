@@ -182,8 +182,8 @@ function scanSelectedFile() {
     loading.classList.add('active');
     message.style.display = 'none';
     
-    // Make AJAX request to scan specific file
-    fetch('/scan_file', {
+    // Make AJAX request to scan specific file with language parameter
+    fetch(`/scan_file?lang=${currentLang}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -209,14 +209,14 @@ function scanSelectedFile() {
             }, 2000);
         } else {
             message.classList.add('info');
-            message.textContent = 'ℹ ' + data.message;
+            message.textContent = 'ℹ ' + (data.message || data.error);
         }
         message.style.display = 'block';
     })
     .catch(error => {
         loading.classList.remove('active');
         button.disabled = false;
-        message.className = 'message';
+        message.className = 'message error';
         message.style.display = 'block';
         message.textContent = `✗ ${t('file_scan_error')}: ${error}`;
     });
