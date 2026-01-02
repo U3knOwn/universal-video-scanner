@@ -695,12 +695,13 @@ function getChannelCount(audioCodec) {
     // Formats like "DTS-HD MA 7.1", "Dolby TrueHD 5.1 (Atmos)", etc.
     const audio = (audioCodec || '').toLowerCase();
     
-    // Match patterns like "7.1", "5.1", "2.0", etc.
-    const channelMatch = audio.match(/(\d+)\.(\d+)/);
+    // Match patterns like "7.1", "5.1", "2.0" that represent channel configurations
+    // Use word boundary or space before to avoid matching version numbers
+    const channelMatch = audio.match(/\s(\d+\.\d+)(?=\s|$|\()/);
     if (channelMatch) {
         // Convert to numeric value for proper sorting
         // e.g., "7.1" becomes 7.1, "5.1" becomes 5.1
-        return parseFloat(channelMatch[0]);
+        return parseFloat(channelMatch[1]);
     }
     
     // Return 0 if no channel info found (will sort last)
