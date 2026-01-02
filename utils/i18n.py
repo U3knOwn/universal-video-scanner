@@ -3,7 +3,11 @@ Internationalization (i18n) utilities for backend messages
 """
 import json
 import os
+import re
 import config
+
+# Supported languages
+SUPPORTED_LANGUAGES = ['en', 'de']
 
 # Cache for loaded translations
 _translations_cache = {}
@@ -77,15 +81,18 @@ def get_request_language(request):
     """
     # Check query parameter first
     lang = request.args.get('lang')
-    if lang and lang in ['en', 'de']:
+    if lang and lang in SUPPORTED_LANGUAGES:
         return lang
     
-    # Check Accept-Language header
+    # Check Accept-Language header with proper parsing
     accept_language = request.headers.get('Accept-Language', '')
-    if 'de' in accept_language.lower():
-        return 'de'
-    elif 'en' in accept_language.lower():
-        return 'en'
+    if accept_language:
+        # Parse Accept-Language header (e.g., "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7")
+        # Extract language codes using regex to match language tags
+        for lang_match in re.finditer(r'\b([a-z]{2})(?:-[A-Z]{2})?\b', accept_language.lower()):
+            lang_code = lang_match.group(1)
+            if lang_code in SUPPORTED_LANGUAGES:
+                return lang_code
     
     # Fallback to configured language
     return config.CONTENT_LANGUAGE.lower() if hasattr(config, 'CONTENT_LANGUAGE') else 'en'
