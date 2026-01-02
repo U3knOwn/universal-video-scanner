@@ -983,7 +983,7 @@ function updateFileCount() {
    ------------------------------- */
 
 function formatDuration(seconds) {
-    if (!seconds || seconds <= 0) return 'Unknown';
+    if (!seconds || seconds <= 0) return t('unknown');
     
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -997,7 +997,7 @@ function formatDuration(seconds) {
 }
 
 function formatFileSize(bytes) {
-    if (bytes === null || bytes === undefined || bytes < 0) return 'Unknown';
+    if (bytes === null || bytes === undefined || bytes < 0) return t('unknown');
     
     // Always convert to GB
     const GB_IN_BYTES = 1024 * 1024 * 1024;
@@ -1089,21 +1089,21 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     if (fileSize !== null && fileSize !== undefined && fileSize >= 0) {
         dialogFileSize.textContent = formatFileSize(fileSize);
     } else {
-        dialogFileSize.textContent = 'Unknown';
+        dialogFileSize.textContent = t('unknown');
     }
     
     // Set video bitrate
     if (videoBitrate && videoBitrate > 0) {
         dialogVideoBitrate.textContent = `${videoBitrate} kbit/s`;
     } else {
-        dialogVideoBitrate.textContent = 'Unknown';
+        dialogVideoBitrate.textContent = t('unknown');
     }
     
     // Set audio bitrate
     if (audioBitrate && audioBitrate > 0) {
         dialogAudioBitrate.textContent = `${audioBitrate} kbit/s`;
     } else {
-        dialogAudioBitrate.textContent = 'Unknown';
+        dialogAudioBitrate.textContent = t('unknown');
     }
     
     // Set up links
