@@ -40,5 +40,11 @@
   "dialog_links": "Links:",
   "dialog_directors": "Regie:",
   "dialog_cast": "Darsteller:",
-  "dialog_no_info": "Keine Informationen"
+  "dialog_no_info": "Keine Informationen",
+  "api_file_scanned_successfully": "Datei erfolgreich gescannt",
+  "api_file_not_profile_or_scanned": "Datei war nicht Profil 7 oder bereits gescannt",
+  "api_assets_updated_successfully": "Alle Assets erfolgreich aktualisiert",
+  "api_no_file_path_provided": "Kein Dateipfad angegeben",
+  "api_file_not_found": "Datei nicht gefunden",
+  "api_failed_to_update_assets": "Fehler beim Aktualisieren einiger Assets"
 }
