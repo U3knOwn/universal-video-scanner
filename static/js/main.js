@@ -996,11 +996,13 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     }
     
     // Set TMDB rating badge if available
-    if (tmdbRating && tmdbRating !== '' && tmdbRating !== 'None' && parseFloat(tmdbRating) > 0) {
-        dialogTmdbRatingElement.textContent = parseFloat(tmdbRating).toFixed(1);
-        dialogTmdbBadge.style.display = 'flex';
-    } else {
-        dialogTmdbBadge.style.display = 'none';
+    if (dialogTmdbBadge && dialogTmdbRatingElement) {
+        if (tmdbRating && tmdbRating !== '' && tmdbRating !== 'None' && parseFloat(tmdbRating) > 0) {
+            dialogTmdbRatingElement.textContent = parseFloat(tmdbRating).toFixed(1);
+            dialogTmdbBadge.style.display = 'flex';
+        } else {
+            dialogTmdbBadge.style.display = 'none';
+        }
     }
     
     // Set plot if available, otherwise show fallback text
