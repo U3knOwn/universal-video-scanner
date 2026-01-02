@@ -1072,7 +1072,7 @@ tbody tr:hover {
     }
 
     .poster-img {
-        max-height: 200px;
+        max-height: 95%;
         max-width: 100%;
         width: auto;
     }
@@ -1151,10 +1151,6 @@ tbody tr:hover {
 
     table {
         font-size: 0.9em;
-    }
-
-    .poster-img {
-        max-height: 150px;
     }
 
     .hdr-badge,
