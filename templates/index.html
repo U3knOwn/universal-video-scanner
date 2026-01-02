@@ -11,7 +11,10 @@
 <body>
     <div class="container">
         <header>
-            <h1><span data-i18n="title"></span></h1>
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='icon.svg') }}" alt="Logo" class="header-logo">
+                <h1 class="title-text"><span data-i18n="title_text"></span></h1>
+            </div>
         </header>
 
         <div class="controls">
