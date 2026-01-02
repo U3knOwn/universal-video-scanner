@@ -514,6 +514,113 @@ function sortTableByProfile() {
     rows.forEach(r => tbody.appendChild(r));
 }
 
+function sortTableByProfileAudio() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody. querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a.getAttribute('data-hdr-format') || '';
+        const aDet = a.getAttribute('data-hdr-detail') || '';
+        const aEl  = a.getAttribute('data-el-type') || '';
+
+        const bFmt = b.getAttribute('data-hdr-format') || '';
+        const bDet = b.getAttribute('data-hdr-detail') || '';
+        const bEl  = b.getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aAudio = getAudioCodecFromRow(a);
+        const bAudio = getAudioCodecFromRow(b);
+        const aAudioRank = getAudioRank(aAudio);
+        const bAudioRank = getAudioRank(bAudio);
+
+        if (aAudioRank !== bAudioRank) return aAudioRank - bAudioRank;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+function sortTableByProfileVideoBitrate() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a. getAttribute('data-hdr-format') || '';
+        const aDet = a. getAttribute('data-hdr-detail') || '';
+        const aEl  = a. getAttribute('data-el-type') || '';
+
+        const bFmt = b.getAttribute('data-hdr-format') || '';
+        const bDet = b.getAttribute('data-hdr-detail') || '';
+        const bEl  = b.getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aVideoBitrate = parseFloat(a.getAttribute('data-video-bitrate')) || 0;
+        const bVideoBitrate = parseFloat(b.getAttribute('data-video-bitrate')) || 0;
+
+        if (bVideoBitrate !== aVideoBitrate) return bVideoBitrate - aVideoBitrate;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+function sortTableByProfileAudioBitrate() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a.getAttribute('data-hdr-format') || '';
+        const aDet = a.getAttribute('data-hdr-detail') || '';
+        const aEl  = a.getAttribute('data-el-type') || '';
+
+        const bFmt = b. getAttribute('data-hdr-format') || '';
+        const bDet = b. getAttribute('data-hdr-detail') || '';
+        const bEl  = b. getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aAudioBitrate = parseFloat(a.getAttribute('data-audio-bitrate')) || 0;
+        const bAudioBitrate = parseFloat(b.getAttribute('data-audio-bitrate')) || 0;
+
+        if (bAudioBitrate !== aAudioBitrate) return bAudioBitrate - aAudioBitrate;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
 function sortTableByFilename() {
     const table = document.getElementById('mediaTable');
     if (!table) return;
@@ -662,6 +769,12 @@ function applySort(mode) {
 
     if (mode === 'profile') {
         sortTableByProfile();
+    } else if (mode === 'profile_audio') {
+        sortTableByProfileAudio();
+    } else if (mode === 'profile_videobitrate') {
+        sortTableByProfileVideoBitrate();
+    } else if (mode === 'profile_audiobitrate') {
+        sortTableByProfileAudioBitrate();
     } else if (mode === 'audio') {
         sortTableByAudio();
     } else if (mode === 'rating') {
