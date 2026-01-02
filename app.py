@@ -65,9 +65,11 @@ def index():
     # Sort by filename
     files_list.sort(key=lambda x: x['filename'])
 
-    return render_template('index.html',
-                           files=files_list,
-                           file_count=len(files_list))
+    return render_template(
+        'index.html',
+        files=files_list,
+        file_count=len(files_list),
+        auto_refresh_interval=config.AUTO_REFRESH_INTERVAL)
 
 
 @app.route('/scan', methods=['POST'])

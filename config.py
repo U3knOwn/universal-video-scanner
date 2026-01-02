@@ -83,6 +83,7 @@ GITHUB_FILES = {
 
 # Scanner configuration constants
 FILE_WRITE_DELAY = int(os.environ.get('FILE_WRITE_DELAY', '5'))
+AUTO_REFRESH_INTERVAL = int(os.environ.get('AUTO_REFRESH_INTERVAL', '10'))
 
 # Bitrate estimation constant for format-level fallback
 # When only format-level bitrate is available, estimate audio as 10% of total
