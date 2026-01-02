@@ -35,6 +35,40 @@ h1 {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Logo Container */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Rotiertes Icon */
+.header-logo {
+    width: 64px;
+    height: 64px;
+    transform: rotate(-12deg);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+    transition: transform 0.3s ease;
+}
+
+.header-logo:hover {
+    transform: rotate(0deg) scale(1.1);
+}
+
+/* Cooler Gradient-Schriftzug */
+.title-text {
+    font-size: 2.5em;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    letter-spacing: 1px;
+    margin-bottom: 0;
+}
+
 .language-switcher select#languageDropdown {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -937,6 +971,21 @@ tbody tr:hover {
     }
 
     h1 {
+        font-size: 1.4em;
+    }
+
+    /* Mobile Responsive */
+    .logo-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .header-logo {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .title-text {
         font-size: 1.4em;
     }
 
