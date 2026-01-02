@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - FILE_WRITE_DELAY=5 # Seconds to wait before scanning new files
+      - AUTO_REFRESH_INTERVAL=10 # Interval for automatic updating of the web UI in seconds
       - TMDB_API_KEY=${TMDB_API_KEY:-}  # Add your TMDB API key here or set via .env file
       - FANART_API_KEY=${FANART_API_KEY:-}  # Add your Fanart.tv API key here or set via .env file
       - IMAGE_SOURCE=${IMAGE_SOURCE:-tmdb}  # Image source: 'tmdb' (default) or 'fanart'

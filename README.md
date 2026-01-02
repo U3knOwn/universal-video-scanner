@@ -85,6 +85,7 @@ The dashboard displays the following information:
 
 - 📊 Tabular overview of all scanned media
 - 🌙 Dark theme for comfortable viewing
+- 🔄 Auto-refresh every 10 seconds
 - ⚡ Live status during scanning
 
 ## Technical Details 🔧
@@ -119,6 +120,7 @@ DoVi-Detector/
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `FILE_WRITE_DELAY` | `5` | Wait time in seconds after file creation before scanning |
+| `AUTO_REFRESH_INTERVAL` | `10` | Auto-refresh interval of web UI in seconds |
 | `TMDB_API_KEY` | `` | TMDB API key for fetching movie posters (optional) |
 | `FANART_API_KEY` | `` | Fanart.tv API key for fetching thumb posters (optional) |
 | `IMAGE_SOURCE` | `tmdb` | Image source selection: `tmdb` (default) or `fanart` |

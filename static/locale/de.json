@@ -1,5 +1,6 @@
 {
   "title": "🎟️ Universal Video Scanner",
+  "title_text": "Universal Video Scanner",
   "media_count": "Dateien",
   "scanning": "Scanne...",
   "scan_all_button": "🚀 Alles scannen",
@@ -7,7 +8,14 @@
   "scan_file_button": "✅",
   "sort_by_filename": "📁 Dateiname",
   "sort_by_profile": "🎞️ HDR-Typ",
+  "sort_by_profile_audio": "🎞️ HDR-Typ + Tonspur",
+  "sort_by_profile_videobitrate": "🎞️ HDR-Typ + Videobitrate",
+  "sort_by_profile_audiobitrate": "🎞️ HDR-Typ + Audiobitrate",
   "sort_by_audio": "🔊 Tonspur",
+  "sort_by_rating": "⭐ Bewertung",
+  "sort_by_filesize": "💾 Dateigröße",
+  "sort_by_videobitrate": "📺 Videobitrate",
+  "sort_by_audiobitrate": "🔈 Audiobitrate",
   "sort_label": "Sortierung auswählen",
   "table_header_poster": "Poster / Dateiname",
   "table_header_hdr": "HDR Format",
@@ -26,5 +34,9 @@
   "dialog_file_size": "Dateigröße:",
   "dialog_video_bitrate": "Videobitrate:",
   "dialog_audio_bitrate": "Audiobitrate:",
-  "dialog_links": "Link:"
+  "dialog_plot": "Handlung:",
+  "dialog_links": "Links:",
+  "dialog_directors": "Regie:",
+  "dialog_cast": "Darsteller:",
+  "dialog_no_info": "Keine Informationen"
 }

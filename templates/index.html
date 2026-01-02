@@ -11,7 +11,10 @@
 <body>
     <div class="container">
         <header>
-            <h1><span data-i18n="title"></span></h1>
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='icon.svg') }}" alt="Logo" class="header-logo">
+                <h1 class="title-text"><span data-i18n="title_text"></span></h1>
+            </div>
         </header>
 
         <div class="controls">
@@ -42,7 +45,14 @@
                     <select id="sortSelect" data-aria-label-i18n="sort_label">
                         <option value="filename" data-i18n="sort_by_filename"></option>
                         <option value="profile" data-i18n="sort_by_profile"></option>
+                        <option value="profile_audio" data-i18n="sort_by_profile_audio"></option>
+                        <option value="profile_videobitrate" data-i18n="sort_by_profile_videobitrate"></option>
+                        <option value="profile_audiobitrate" data-i18n="sort_by_profile_audiobitrate"></option>
                         <option value="audio" data-i18n="sort_by_audio"></option>
+                        <option value="rating" data-i18n="sort_by_rating"></option>
+                        <option value="filesize" data-i18n="sort_by_filesize"></option>
+                        <option value="videobitrate" data-i18n="sort_by_videobitrate"></option>
+                        <option value="audiobitrate" data-i18n="sort_by_audiobitrate"></option>
                     </select>
                 </div>
                 <div class="right-group">
@@ -69,7 +79,13 @@
             <tbody>
                 {% for file in files %}
                 {# We add data attributes so JS can handle sorting #}
-                <tr data-hdr-format="{{ file.hdr_format }}" data-hdr-detail="{{ file.hdr_detail }}" data-el-type="{{ file.el_type or '' }}">
+                <tr data-hdr-format="{{ file.hdr_format }}" 
+                    data-hdr-detail="{{ file.hdr_detail }}" 
+                    data-el-type="{{ file.el_type or '' }}" 
+                    data-tmdb-rating="{{ file.tmdb_rating or '0' }}" 
+                    data-file-size="{{ file.file_size|default('0') }}" 
+                    data-video-bitrate="{{ file.video_bitrate|default('0') }}" 
+                    data-audio-bitrate="{{ file.audio_bitrate|default('0') }}">
                     <td data-label-i18n="table_header_poster" data-label="Poster / Dateiname" title="{{ file.filename }}">
                         {% if file.poster_url %}
                         <div class="poster-container" 
@@ -81,6 +97,10 @@
                              data-file-size="{{ file.file_size|default('') }}"
                              data-poster-url="{{ file.poster_url|default('') }}"
                              data-tmdb-id="{{ file.tmdb_id|default('') }}"
+                             data-tmdb-rating="{{ file.tmdb_rating|default('') }}"
+                             data-plot="{{ file.tmdb_plot|default('') }}"
+                             data-directors="{{ file.tmdb_directors|default([])|join(', ') }}"
+                             data-cast="{{ file.tmdb_cast|default([])|join(', ') }}"
                              onclick="showMediaDialogFromData(this)">
                             {% if file.tmdb_title %}
                             <span class="poster-title">
@@ -90,9 +110,9 @@
                             <div class="poster-img-wrapper">
                                 <img src="{{ file.poster_url }}" alt="{{ file.filename }}" class="poster-img" loading="lazy">
                                 {% if file.tmdb_rating %}
-                                <div class="imdb-badge">
-                                    <span class="imdb-logo">★</span>
-                                    <span class="imdb-rating">{{ "%.1f"|format(file.tmdb_rating) }}</span>
+                                <div class="tmdb-badge">
+                                    <span class="tmdb-logo">★</span>
+                                    <span class="tmdb-rating">{{ "%.1f"|format(file.tmdb_rating) }}</span>
                                 </div>
                                 {% endif %}
                             </div>
@@ -107,6 +127,10 @@
                               data-file-size="{{ file.file_size|default('') }}"
                               data-poster-url="{{ file.poster_url|default('') }}"
                               data-tmdb-id="{{ file.tmdb_id|default('') }}"
+                              data-tmdb-rating="{{ file.tmdb_rating|default('') }}"
+                              data-plot="{{ file.tmdb_plot|default('') }}"
+                              data-directors="{{ file.tmdb_directors|default([])|join(', ') }}"
+                              data-cast="{{ file.tmdb_cast|default([])|join(', ') }}"
                               onclick="showMediaDialogFromData(this)">{{ file.filename }}</span>
                         {% endif %}
                     </td>
@@ -206,6 +230,16 @@
             </div>
         </div>
 
+        <footer class="site-footer">
+            <span>© 2026 Universal Video Scanner</span>
+            <a href="https://github.com/U3knOwn/universal-video-scanner" target="_blank" rel="noopener noreferrer" class="github-link">
+                <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                GitHub
+            </a>
+        </footer>
+
     </div>
 
     <!-- Media Details Dialog -->
@@ -214,9 +248,27 @@
             <button class="dialog-close" onclick="closeMediaDialog(event)" aria-label="Close dialog">&times;</button>
             <h2 class="dialog-title" id="dialogTitle"></h2>
             <div class="dialog-poster" id="dialogPoster" style="display: none;">
-                <img id="dialogPosterImg" class="dialog-poster-img" src="" alt="Poster">
+                <div class="dialog-poster-wrapper">
+                    <img id="dialogPosterImg" class="dialog-poster-img" src="" alt="Poster">
+                    <div class="tmdb-badge dialog-tmdb-badge" id="dialogTmdbBadge" style="display: none;">
+                        <span class="tmdb-logo">★</span>
+                        <span class="tmdb-rating" id="dialogTmdbRating"></span>
+                    </div>
+                </div>
             </div>
             <div class="dialog-info">
+                <div class="dialog-info-item" id="dialogPlot" style="display: none;">
+                    <span class="dialog-label" data-i18n="dialog_plot"></span>
+                    <p class="dialog-plot-text" id="dialogPlotText"></p>
+                </div>
+                <div class="dialog-info-item" id="dialogDirectors" style="display: none;">
+                    <span class="dialog-label" data-i18n="dialog_directors"></span>
+                    <span class="dialog-value" id="dialogDirectorsText"></span>
+                </div>
+                <div class="dialog-info-item" id="dialogCast" style="display: none;">
+                    <span class="dialog-label" data-i18n="dialog_cast"></span>
+                    <span class="dialog-value" id="dialogCastText"></span>
+                </div>
                 <div class="dialog-info-item">
                     <span class="dialog-label" data-i18n="dialog_duration"></span>
                     <span class="dialog-value" id="dialogDuration"></span>
@@ -233,10 +285,11 @@
                     <span class="dialog-label" data-i18n="dialog_audio_bitrate"></span>
                     <span class="dialog-value" id="dialogAudioBitrate"></span>
                 </div>
-                <div class="dialog-info-item">
+                <div class="dialog-info-item" id="dialogLinksContainer">
                     <span class="dialog-label" data-i18n="dialog_links"></span>
                     <div class="dialog-links">
-                        <a id="dialogTmdbLink" class="dialog-link tmdb" href="#" target="_blank" rel="noopener noreferrer">TMDb</a>
+                        <a id="dialogTmdbLink" class="dialog-link tmdb" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">TMDb</a>
+                        <a id="dialogTrailerLink" class="dialog-link youtube" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">YouTube</a>
                     </div>
                 </div>
             </div>

@@ -158,18 +158,6 @@ function loadFileList() {
                     }
                     select.appendChild(option);
                 });
-
-                // enable scan for selected file when choosing
-				select.addEventListener('change', function() {
-					const scanBtn = document.getElementById('scanFileButton');
-					if (this.value) {
-						scanBtn.classList.remove('hidden');
-						scanBtn.disabled = false;
-					} else {
-						scanBtn.classList.add('hidden');
-						scanBtn.disabled = true;
-					}
-				});
             }
         })
         .catch(error => {
@@ -526,6 +514,113 @@ function sortTableByProfile() {
     rows.forEach(r => tbody.appendChild(r));
 }
 
+function sortTableByProfileAudio() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody. querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a.getAttribute('data-hdr-format') || '';
+        const aDet = a.getAttribute('data-hdr-detail') || '';
+        const aEl  = a.getAttribute('data-el-type') || '';
+
+        const bFmt = b.getAttribute('data-hdr-format') || '';
+        const bDet = b.getAttribute('data-hdr-detail') || '';
+        const bEl  = b.getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aAudio = getAudioCodecFromRow(a);
+        const bAudio = getAudioCodecFromRow(b);
+        const aAudioRank = getAudioRank(aAudio);
+        const bAudioRank = getAudioRank(bAudio);
+
+        if (aAudioRank !== bAudioRank) return aAudioRank - bAudioRank;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+function sortTableByProfileVideoBitrate() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a. getAttribute('data-hdr-format') || '';
+        const aDet = a. getAttribute('data-hdr-detail') || '';
+        const aEl  = a. getAttribute('data-el-type') || '';
+
+        const bFmt = b.getAttribute('data-hdr-format') || '';
+        const bDet = b.getAttribute('data-hdr-detail') || '';
+        const bEl  = b.getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aVideoBitrate = parseFloat(a.getAttribute('data-video-bitrate')) || 0;
+        const bVideoBitrate = parseFloat(b.getAttribute('data-video-bitrate')) || 0;
+
+        if (bVideoBitrate !== aVideoBitrate) return bVideoBitrate - aVideoBitrate;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+function sortTableByProfileAudioBitrate() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aFmt = a.getAttribute('data-hdr-format') || '';
+        const aDet = a.getAttribute('data-hdr-detail') || '';
+        const aEl  = a.getAttribute('data-el-type') || '';
+
+        const bFmt = b. getAttribute('data-hdr-format') || '';
+        const bDet = b. getAttribute('data-hdr-detail') || '';
+        const bEl  = b. getAttribute('data-el-type') || '';
+
+        const aRank = getProfileRank(aFmt, aDet, aEl);
+        const bRank = getProfileRank(bFmt, bDet, bEl);
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aAudioBitrate = parseFloat(a.getAttribute('data-audio-bitrate')) || 0;
+        const bAudioBitrate = parseFloat(b.getAttribute('data-audio-bitrate')) || 0;
+
+        if (bAudioBitrate !== aAudioBitrate) return bAudioBitrate - aAudioBitrate;
+
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
 function sortTableByFilename() {
     const table = document.getElementById('mediaTable');
     if (!table) return;
@@ -627,6 +722,46 @@ function sortTableByAudio() {
     rows.forEach(r => tbody.appendChild(r));
 }
 
+function sortTableByRating() {
+    sortTableByNumericAttribute('data-tmdb-rating');
+}
+
+function sortTableByFileSize() {
+    sortTableByNumericAttribute('data-file-size');
+}
+
+function sortTableByVideoBitrate() {
+    sortTableByNumericAttribute('data-video-bitrate');
+}
+
+function sortTableByAudioBitrate() {
+    sortTableByNumericAttribute('data-audio-bitrate');
+}
+
+function sortTableByNumericAttribute(attribute) {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aValue = parseFloat(a.getAttribute(attribute)) || 0;
+        const bValue = parseFloat(b.getAttribute(attribute)) || 0;
+        
+        // Sort descending (highest/largest first)
+        if (bValue !== aValue) return bValue - aValue;
+        
+        // If same value, sort secondarily by filename
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
 function applySort(mode) {
     if (!mode) mode = localStorage.getItem('dovi_sort_mode') || 'filename';
     const select = document.getElementById('sortSelect');
@@ -634,8 +769,22 @@ function applySort(mode) {
 
     if (mode === 'profile') {
         sortTableByProfile();
+    } else if (mode === 'profile_audio') {
+        sortTableByProfileAudio();
+    } else if (mode === 'profile_videobitrate') {
+        sortTableByProfileVideoBitrate();
+    } else if (mode === 'profile_audiobitrate') {
+        sortTableByProfileAudioBitrate();
     } else if (mode === 'audio') {
         sortTableByAudio();
+    } else if (mode === 'rating') {
+        sortTableByRating();
+    } else if (mode === 'filesize') {
+        sortTableByFileSize();
+    } else if (mode === 'videobitrate') {
+        sortTableByVideoBitrate();
+    } else if (mode === 'audiobitrate') {
+        sortTableByAudioBitrate();
     } else {
         sortTableByFilename();
     }
@@ -672,6 +821,21 @@ document.addEventListener('DOMContentLoaded', function() {
             searchInput.addEventListener('input', searchMedia);
         }
         
+        // Listener for file select change
+        const fileSelect = document.getElementById('fileSelect');
+        if (fileSelect) {
+            fileSelect.addEventListener('change', function() {
+                const scanBtn = document.getElementById('scanFileButton');
+                if (this.value) {
+                    scanBtn.classList.remove('hidden');
+                    scanBtn.disabled = false;
+                } else {
+                    scanBtn.classList.add('hidden');
+                    scanBtn.disabled = true;
+                }
+            });
+        }
+        
         // Listener for Escape key to close dialog
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -681,8 +845,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+        
+        // Set up Server-Sent Events for real-time deletion updates
+        setupSSE();
     });
 });
+
+/* -------------------------------
+   Server-Sent Events for Live Updates
+   ------------------------------- */
+
+function setupSSE() {
+    if (typeof EventSource === 'undefined') {
+        console.warn('EventSource not supported by browser');
+        return;
+    }
+    
+    const eventSource = new EventSource('/events');
+    
+    eventSource.addEventListener('file_deleted', function(e) {
+        try {
+            const data = JSON.parse(e.data);
+            const filePath = data.file_path;
+            
+            if (filePath) {
+                removeFileFromTable(filePath);
+            }
+        } catch (error) {
+            console.error('Error parsing deletion event:', error);
+        }
+    });
+    
+    eventSource.onerror = function(e) {
+        console.error('SSE connection error:', e);
+        // EventSource will automatically try to reconnect
+    };
+}
+
+function removeFileFromTable(filePath) {
+    // Find the table row that corresponds to the deleted file
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tbody tr');
+    
+    for (const row of rows) {
+        // Try to find the title attribute which contains the filename
+        const posterCell = row.querySelector('td[data-label-i18n="table_header_poster"]');
+        if (posterCell && posterCell.getAttribute('title') === filePath) {
+            row.remove();
+            updateFileCount();
+            updateProfileStats();
+            console.log(`Removed deleted file from table: ${filePath}`);
+            return;
+        }
+        
+        // Fallback: check if filename matches (without full path)
+        const filename = filePath.split('/').pop();
+        if (posterCell && posterCell.getAttribute('title') === filename) {
+            row.remove();
+            updateFileCount();
+            updateProfileStats();
+            console.log(`Removed deleted file from table: ${filename}`);
+            return;
+        }
+    }
+}
+
+function updateFileCount() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    
+    const visibleRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+    const fileCountElement = document.getElementById('fileCount');
+    
+    if (fileCountElement) {
+        const count = visibleRows.length;
+        fileCountElement.innerHTML = `${count} <span data-i18n="media_count"></span>`;
+        applyTranslations();
+    }
+}
 
 /* -------------------------------
    Media Details Dialog Functions
@@ -716,7 +958,7 @@ function formatFileSize(bytes) {
     return `${formattedSize} GB`;
 }
 
-function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId) {
+function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId, plot, directors, cast, tmdbRating) {
     const overlay = document.getElementById('mediaDialogOverlay');
     const dialogTitle = document.getElementById('dialogTitle');
     const dialogDuration = document.getElementById('dialogDuration');
@@ -725,7 +967,18 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     const dialogAudioBitrate = document.getElementById('dialogAudioBitrate');
     const dialogPoster = document.getElementById('dialogPoster');
     const dialogPosterImg = document.getElementById('dialogPosterImg');
+    const dialogTmdbBadge = document.getElementById('dialogTmdbBadge');
+    const dialogTmdbRatingElement = document.getElementById('dialogTmdbRating');
     const dialogTmdbLink = document.getElementById('dialogTmdbLink');
+    const dialogTrailer = document.getElementById('dialogTrailer');
+    const dialogTrailerLink = document.getElementById('dialogTrailerLink');
+    const dialogLinksContainer = document.getElementById('dialogLinksContainer');
+    const dialogPlot = document.getElementById('dialogPlot');
+    const dialogPlotText = document.getElementById('dialogPlotText');
+    const dialogDirectors = document.getElementById('dialogDirectors');
+    const dialogDirectorsText = document.getElementById('dialogDirectorsText');
+    const dialogCast = document.getElementById('dialogCast');
+    const dialogCastText = document.getElementById('dialogCastText');
     
     // Set title with year if available
     if (year && year !== '') {
@@ -735,11 +988,46 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     }
     
     // Set poster image if available
-    if (posterUrl && posterUrl !== '') {
+    if (posterUrl && posterUrl !== '' && posterUrl !== 'None') {
         dialogPosterImg.src = posterUrl;
         dialogPoster.style.display = 'block';
     } else {
         dialogPoster.style.display = 'none';
+    }
+    
+    // Set TMDB rating badge if available
+    if (dialogTmdbBadge && dialogTmdbRatingElement) {
+        if (tmdbRating && tmdbRating !== '' && tmdbRating !== 'None' && parseFloat(tmdbRating) > 0) {
+            dialogTmdbRatingElement.textContent = parseFloat(tmdbRating).toFixed(1);
+            dialogTmdbBadge.style.display = 'flex';
+        } else {
+            dialogTmdbBadge.style.display = 'none';
+        }
+    }
+    
+    // Set plot if available, otherwise show fallback text
+    if (plot && plot !== '' && plot !== 'None') {
+        dialogPlotText.textContent = plot;
+        dialogPlot.style.display = 'flex';
+    } else {
+        dialogPlotText.textContent = t('dialog_no_info');
+        dialogPlot.style.display = 'flex';
+    }
+    
+    // Set directors if available
+    if (directors && directors !== '') {
+        dialogDirectorsText.textContent = directors;
+        dialogDirectors.style.display = 'flex';
+    } else {
+        dialogDirectors.style.display = 'none';
+    }
+    
+    // Set cast if available (with "..." to indicate more actors)
+    if (cast && cast !== '') {
+        dialogCastText.textContent = cast + ' ...';
+        dialogCast.style.display = 'flex';
+    } else {
+        dialogCast.style.display = 'none';
     }
     
     // Set duration
@@ -767,13 +1055,39 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     }
     
     // Set up links
-    if (tmdbId && tmdbId !== '') {
+    dialogTmdbLink.classList.remove(...dialogTmdbLink.classList);
+    dialogTmdbLink.classList.add('dialog-link', 'tmdb');
+    dialogTrailerLink.classList.remove(...dialogTrailerLink.classList);
+    dialogTrailerLink.classList.add('dialog-link', 'youtube');
+
+    if (tmdbId && tmdbId !== 'None') {
         // TMDb link - direct to movie page
         dialogTmdbLink.href = `https://www.themoviedb.org/movie/${tmdbId}`;
         dialogTmdbLink.style.display = 'inline-block';
+        
+        // Set up YouTube trailer link
+        if (title && title !== '') {
+            const searchQuery = year && year !== '' ?
+                `${title} (${year}) - Trailer` :
+                `${title} - Trailer`;
+            const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+            dialogTrailerLink.href = youtubeUrl;
+            dialogTrailerLink.style.display = 'inline-block';
+
+            if (dialogTrailer && dialogTrailer.style) dialogTrailer.style.display = '';
+        } else {
+            dialogTrailerLink.style.display = 'none';
+        }
+        
+        // Show links container
+        if (dialogLinksContainer) dialogLinksContainer.style.display = '';
     } else {
         // Hide links if no TMDb ID
         dialogTmdbLink.style.display = 'none';
+        dialogTrailerLink.style.display = 'none';
+        
+        // Hide entire links container
+        if (dialogLinksContainer) dialogLinksContainer.style.display = 'none';
     }
     
     // Show dialog
@@ -799,8 +1113,12 @@ function showMediaDialogFromData(element) {
     const fileSize = parseInt(element.getAttribute('data-file-size')) || null;
     const posterUrl = element.getAttribute('data-poster-url') || '';
     const tmdbId = element.getAttribute('data-tmdb-id') || '';
+    const tmdbRating = element.getAttribute('data-tmdb-rating') || '';
+    const plot = element.getAttribute('data-plot') || '';
+    const directors = element.getAttribute('data-directors') || '';
+    const cast = element.getAttribute('data-cast') || '';
     
-    showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId);
+    showMediaDialog(title, year, duration, videoBitrate, audioBitrate, fileSize, posterUrl, tmdbId, plot, directors, cast, tmdbRating);
 }
 
 function closeMediaDialog(event) {
