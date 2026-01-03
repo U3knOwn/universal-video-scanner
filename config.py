@@ -3,7 +3,6 @@ Configuration module for Universal Video Scanner
 Contains all environment variables, constants, and configuration settings
 """
 import os
-import re
 
 # Check if requests module is available
 try:
@@ -58,28 +57,35 @@ LANGUAGE_CODE_MAP = {
 }
 
 # Static files configuration
-TEMPLATES_DIR = os.path.join(DATA_DIR, 'templates')
-STATIC_DIR = os.path.join(DATA_DIR, 'static')
+# Use bundled static files from /app directory instead of downloading from GitHub
+TEMPLATES_DIR = '/app/templates'
+STATIC_DIR = '/app/static'
 CSS_DIR = os.path.join(STATIC_DIR, 'css')
 JS_DIR = os.path.join(STATIC_DIR, 'js')
 LOCALE_DIR = os.path.join(STATIC_DIR, 'locale')
 FONTS_DIR = os.path.join(STATIC_DIR, 'fonts')
 
-# GitHub raw URLs for downloading static files
-GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/U3knOwn/universal-video-scanner/main'
-GITHUB_FILES = {
-    'templates/index.html': os.path.join(TEMPLATES_DIR, 'index.html'),
-    'static/css/style.css': os.path.join(CSS_DIR, 'style.css'),
-    'static/js/main.js': os.path.join(JS_DIR, 'main.js'),
-    'static/locale/de.json': os.path.join(LOCALE_DIR, 'de.json'),
-    'static/locale/en.json': os.path.join(LOCALE_DIR, 'en.json'),
-    'static/fonts/inter.css': os.path.join(FONTS_DIR, 'inter.css'),
-    'static/fonts/Inter-Regular.woff2': os.path.join(FONTS_DIR, 'Inter-Regular.woff2'),
-    'static/fonts/Inter-Medium.woff2': os.path.join(FONTS_DIR, 'Inter-Medium.woff2'),
-    'static/fonts/Inter-SemiBold.woff2': os.path.join(FONTS_DIR, 'Inter-SemiBold.woff2'),
-    'static/fonts/Inter-Bold.woff2': os.path.join(FONTS_DIR, 'Inter-Bold.woff2'),
-    'static/favicon.ico': os.path.join(STATIC_DIR, 'favicon.ico'),
-}
+
+def get_templates_dir():
+    """
+    Get the templates directory path.
+    Prefers the copy in DATA_DIR if it exists, otherwise uses the bundled version.
+    """
+    data_templates = os.path.join(DATA_DIR, 'templates')
+    if os.path.exists(data_templates):
+        return data_templates
+    return TEMPLATES_DIR
+
+
+def get_static_dir():
+    """
+    Get the static directory path.
+    Prefers the copy in DATA_DIR if it exists, otherwise uses the bundled version.
+    """
+    data_static = os.path.join(DATA_DIR, 'static')
+    if os.path.exists(data_static):
+        return data_static
+    return STATIC_DIR
 
 # Scanner configuration constants
 FILE_WRITE_DELAY = int(os.environ.get('FILE_WRITE_DELAY', '5'))
@@ -97,9 +103,4 @@ def ensure_directories():
     """Ensure all required directories exist. Call this from main() in app.py"""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
-    os.makedirs(TEMPLATES_DIR, exist_ok=True)
-    os.makedirs(CSS_DIR, exist_ok=True)
-    os.makedirs(JS_DIR, exist_ok=True)
-    os.makedirs(LOCALE_DIR, exist_ok=True)
-    os.makedirs(FONTS_DIR, exist_ok=True)
     os.makedirs(POSTER_CACHE_DIR, exist_ok=True)

@@ -182,8 +182,8 @@ function scanSelectedFile() {
     loading.classList.add('active');
     message.style.display = 'none';
     
-    // Make AJAX request to scan specific file
-    fetch('/scan_file', {
+    // Make AJAX request to scan specific file with language parameter
+    fetch(`/scan_file?lang=${currentLang}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -209,14 +209,14 @@ function scanSelectedFile() {
             }, 2000);
         } else {
             message.classList.add('info');
-            message.textContent = 'ℹ ' + data.message;
+            message.textContent = 'ℹ ' + (data.message || data.error);
         }
         message.style.display = 'block';
     })
     .catch(error => {
         loading.classList.remove('active');
         button.disabled = false;
-        message.className = 'message';
+        message.className = 'message error';
         message.style.display = 'block';
         message.textContent = `✗ ${t('file_scan_error')}: ${error}`;
     });
@@ -541,6 +541,10 @@ function sortTableByProfileAudio() {
 
         if (aAudioRank !== bAudioRank) return aAudioRank - bAudioRank;
 
+        const aChannels = getChannelCount(aAudio);
+        const bChannels = getChannelCount(bAudio);
+        if (aChannels !== bChannels) return bChannels - aChannels;
+
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
@@ -690,6 +694,17 @@ function getAudioRank(audioCodec) {
     return 9;
 }
 
+function getChannelCount(audioCodec) {
+    const audio = (audioCodec || '').toLowerCase();
+    const channelMatch = audio.match(/\s(\d+\.\d+)(?=\s|$|\()/);
+
+    if (channelMatch) {
+        return parseFloat(channelMatch[1]);
+    }
+
+    return 0;
+}
+
 function sortTableByAudio() {
     const table = document.getElementById('mediaTable');
     if (!table) return;
@@ -704,14 +719,16 @@ function sortTableByAudio() {
         const bRank = getAudioRank(bAudio);
         
         if (aRank !== bRank) return aRank - bRank;
+		
+        const aChannels = getChannelCount(aAudio);
+        const bChannels = getChannelCount(bAudio);
+        if (aChannels !== bChannels) return bChannels - aChannels;
         
-        // If same rank, sort alphabetically by codec name
         const aLower = aAudio.toLowerCase();
         const bLower = bAudio.toLowerCase();
         if (aLower < bLower) return -1;
         if (aLower > bLower) return 1;
         
-        // If same audio codec, sort secondarily by filename
         const aName = getFilenameFromRow(a).toLowerCase();
         const bName = getFilenameFromRow(b).toLowerCase();
         if (aName < bName) return -1;
@@ -736,6 +753,54 @@ function sortTableByVideoBitrate() {
 
 function sortTableByAudioBitrate() {
     sortTableByNumericAttribute('data-audio-bitrate');
+}
+
+function sortTableByYear() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aYear = parseInt(a.getAttribute('data-year')) || 0;
+        const bYear = parseInt(b.getAttribute('data-year')) || 0;
+        
+        // Sort descending (newest first)
+        if (bYear !== aYear) return bYear - aYear;
+        
+        // If same year, sort secondarily by filename
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+function sortTableByDuration() {
+    const table = document.getElementById('mediaTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aDuration = parseFloat(a.getAttribute('data-duration')) || 0;
+        const bDuration = parseFloat(b.getAttribute('data-duration')) || 0;
+        
+        // Sort descending (longest first)
+        if (bDuration !== aDuration) return bDuration - aDuration;
+        
+        // If same duration, sort secondarily by filename
+        const aName = getFilenameFromRow(a).toLowerCase();
+        const bName = getFilenameFromRow(b).toLowerCase();
+        if (aName < bName) return -1;
+        if (aName > bName) return 1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
 }
 
 function sortTableByNumericAttribute(attribute) {
@@ -785,6 +850,10 @@ function applySort(mode) {
         sortTableByVideoBitrate();
     } else if (mode === 'audiobitrate') {
         sortTableByAudioBitrate();
+    } else if (mode === 'year') {
+        sortTableByYear();
+    } else if (mode === 'duration') {
+        sortTableByDuration();
     } else {
         sortTableByFilename();
     }
@@ -931,7 +1000,7 @@ function updateFileCount() {
    ------------------------------- */
 
 function formatDuration(seconds) {
-    if (!seconds || seconds <= 0) return 'Unknown';
+    if (!seconds || seconds <= 0) return t('unknown');
     
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -945,7 +1014,7 @@ function formatDuration(seconds) {
 }
 
 function formatFileSize(bytes) {
-    if (bytes === null || bytes === undefined || bytes < 0) return 'Unknown';
+    if (bytes === null || bytes === undefined || bytes < 0) return t('unknown');
     
     // Always convert to GB
     const GB_IN_BYTES = 1024 * 1024 * 1024;
@@ -1037,21 +1106,21 @@ function showMediaDialog(title, year, duration, videoBitrate, audioBitrate, file
     if (fileSize !== null && fileSize !== undefined && fileSize >= 0) {
         dialogFileSize.textContent = formatFileSize(fileSize);
     } else {
-        dialogFileSize.textContent = 'Unknown';
+        dialogFileSize.textContent = t('unknown');
     }
     
     // Set video bitrate
     if (videoBitrate && videoBitrate > 0) {
         dialogVideoBitrate.textContent = `${videoBitrate} kbit/s`;
     } else {
-        dialogVideoBitrate.textContent = 'Unknown';
+        dialogVideoBitrate.textContent = t('unknown');
     }
     
     // Set audio bitrate
     if (audioBitrate && audioBitrate > 0) {
         dialogAudioBitrate.textContent = `${audioBitrate} kbit/s`;
     } else {
-        dialogAudioBitrate.textContent = 'Unknown';
+        dialogAudioBitrate.textContent = t('unknown');
     }
     
     // Set up links

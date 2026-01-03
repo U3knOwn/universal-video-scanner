@@ -16,6 +16,8 @@
   "sort_by_filesize": "💾 By file size",
   "sort_by_videobitrate": "📺 By video bitrate",
   "sort_by_audiobitrate": "🔈 By audio bitrate",
+  "sort_by_year": "📅 By year",
+  "sort_by_duration": "⏱️ By duration",
   "sort_label": "Select sorting",
   "table_header_poster": "Poster / Filename",
   "table_header_hdr": "HDR Format",
@@ -38,5 +40,11 @@
   "dialog_links": "Links:",
   "dialog_directors": "Directors:",
   "dialog_cast": "Cast:",
-  "dialog_no_info": "No information available"
+  "dialog_no_info": "No information available",
+  "api_file_scanned_successfully": "File scanned successfully",
+  "api_file_not_profile_or_scanned": "File was not Profile 7 or already scanned",
+  "api_assets_updated_successfully": "All assets updated successfully",
+  "api_no_file_path_provided": "No file path provided",
+  "api_file_not_found": "File not found",
+  "api_failed_to_update_assets": "Failed to update some assets"
 }

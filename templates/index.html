@@ -44,13 +44,15 @@
                 <div class="left-group">
                     <select id="sortSelect" data-aria-label-i18n="sort_label">
                         <option value="filename" data-i18n="sort_by_filename"></option>
+                        <option value="filesize" data-i18n="sort_by_filesize"></option>
+                        <option value="rating" data-i18n="sort_by_rating"></option>
+                        <option value="year" data-i18n="sort_by_year"></option>
+                        <option value="duration" data-i18n="sort_by_duration"></option>
                         <option value="profile" data-i18n="sort_by_profile"></option>
                         <option value="profile_audio" data-i18n="sort_by_profile_audio"></option>
                         <option value="profile_videobitrate" data-i18n="sort_by_profile_videobitrate"></option>
                         <option value="profile_audiobitrate" data-i18n="sort_by_profile_audiobitrate"></option>
                         <option value="audio" data-i18n="sort_by_audio"></option>
-                        <option value="rating" data-i18n="sort_by_rating"></option>
-                        <option value="filesize" data-i18n="sort_by_filesize"></option>
                         <option value="videobitrate" data-i18n="sort_by_videobitrate"></option>
                         <option value="audiobitrate" data-i18n="sort_by_audiobitrate"></option>
                     </select>
@@ -85,7 +87,9 @@
                     data-tmdb-rating="{{ file.tmdb_rating or '0' }}" 
                     data-file-size="{{ file.file_size|default('0') }}" 
                     data-video-bitrate="{{ file.video_bitrate|default('0') }}" 
-                    data-audio-bitrate="{{ file.audio_bitrate|default('0') }}">
+                    data-audio-bitrate="{{ file.audio_bitrate|default('0') }}"
+                    data-year="{{ file.tmdb_year|default('') }}"
+                    data-duration="{{ file.duration|default('') }}">
                     <td data-label-i18n="table_header_poster" data-label="Poster / Dateiname" title="{{ file.filename }}">
                         {% if file.poster_url %}
                         <div class="poster-container" 

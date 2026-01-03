@@ -12,6 +12,16 @@ Universal Video Scanner with Web Interface - Automatic detection of HDR formats 
 - **Docker-based**: Simple deployment with Docker Compose
 - **Manual Scan**: Fallback button for on-demand scanning
 
+## Software on Docker Hub 🐳
+
+The software is also available on [Docker Hub](https://hub.docker.com/r/u3known/universal-video-scanner/):
+
+<a href="https://hub.docker.com/r/u3known/universal-video-scanner/" target="_blank">
+  <img src="https://github.com/user-attachments/assets/5f58e083-eac7-4eab-84c7-bc75b204f246"
+       alt="Docker Hub"
+       width="250">
+</a>
+
 ## Quick Start 🚀
 
 ### Prerequisites
@@ -100,6 +110,10 @@ DoVi-Detector/
 ├── requirements.txt    # Python dependencies
 ├── media/             # Media directory (volume)
 └── data/              # Database directory (volume)
+    ├── scanned_files.json  # Video scan results
+    ├── posters/           # Cached poster images
+    ├── static/            # Static files (CSS, JS, fonts, locales)
+    └── templates/         # HTML templates
 ```
 
 ### Scanner Workflow
@@ -110,10 +124,53 @@ DoVi-Detector/
 4. **dovi_tool info** analyzes RPU and determines profile/EL type
 5. **Results** are saved to JSON database
 
+### Static Files and Templates
+
+The application intelligently manages static files and templates with version tracking:
+
+- **First run**: Automatically copies `static/` and `templates/` directories to `./data/`
+- **Container restarts**: Your customizations are **preserved** (files are not overwritten)
+- **Docker updates**: New versions are automatically deployed when the container image is updated
+
+**File Locations:**
+- **Host system**: `./data/static/` and `./data/templates/`
+- **Inside container**: `/app/data/static/` and `/app/data/templates/`
+
+**How it works:**
+1. On first startup, files are copied from the container to `./data/`
+2. You can customize any files (CSS, JS, HTML, translations)
+3. On restart, your customizations are **preserved**
+4. When you update the Docker image (`docker-compose pull`), the app detects the change and updates the files
+5. After an update, you can make new customizations that will again persist across restarts
+
+**Access Rights:**
+- All copied files and directories are **writable** by user and group
+- You can modify any file without special permissions
+- Changes take effect after restarting the container
+
+**Example customizations:**
+```bash
+# Edit CSS styles
+nano ./data/static/css/style.css
+
+# Modify translations
+nano ./data/static/locale/en.json
+
+# Customize HTML template
+nano ./data/templates/index.html
+
+# Restart container to apply changes (customizations preserved)
+docker-compose restart
+
+# Update Docker image (files will be updated to new version)
+docker-compose pull
+docker-compose up -d
+```
+
 ### Volumes
 
 - `./media:/media` - Media directory
-- `./data:/app/data` - Persistent database
+- `./data:/app/data` - Persistent database, cached posters, static files, and templates
 
 ### Environment Variables
 
@@ -291,15 +348,6 @@ docker-compose logs dovi-detector
 1. Check if files exist in `media/` directory
 2. Use the manual scan button
 3. Check logs: `docker-compose logs -f`
-
-### Port 2367 Already in Use
-
-Change the port in `docker-compose.yml`:
-
-```yaml
-ports:
-  - "8080:2367"  # External 8080, internal 2367
-```
 
 ### Reset Database
 

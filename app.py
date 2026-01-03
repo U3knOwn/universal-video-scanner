@@ -8,12 +8,14 @@ import re
 import threading
 import queue
 from flask import Flask, render_template, jsonify, request, send_file, Response
+from flask.helpers import send_from_directory
 
 # Import configuration
 import config
 
 # Import utility functions
-from utils.file_utils import download_static_files, update_static_files, cleanup_temp_directory
+from utils.file_utils import cleanup_temp_directory, copy_static_and_templates_to_data_dir
+from utils.i18n import translate, get_request_language
 
 # Import service modules
 from services import database
@@ -76,8 +78,6 @@ def index():
 def manual_scan():
     """Endpoint for manual scan trigger"""
     try:
-        initial_count = len(database.scanned_files)
-
         # Clean up database for non-existent files
         removed_count = database.cleanup_database(config.DB_FILE, _delete_cached_poster_wrapper)
 
@@ -144,19 +144,22 @@ def get_files():
 def scan_single_file():
     """Endpoint to scan a specific file"""
     try:
+        # Get user's preferred language
+        lang = get_request_language(request)
+
         data = request.get_json()
         file_path = data.get('file_path')
 
         if not file_path:
             return jsonify({
                 'success': False,
-                'error': 'No file path provided'
+                'error': translate('api_no_file_path_provided', lang)
             }), 400
 
         if not os.path.exists(file_path):
             return jsonify({
                 'success': False,
-                'error': 'File not found'
+                'error': translate('api_file_not_found', lang)
             }), 404
 
         # Scan the file
@@ -165,36 +168,14 @@ def scan_single_file():
         if result:
             return jsonify({
                 'success': True,
-                'message': f'File scanned successfully',
+                'message': translate('api_file_scanned_successfully', lang),
                 'file_info': result
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'File was not Profile 7 or already scanned'
+                'message': translate('api_file_not_profile_or_scanned', lang)
             })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@app.route('/update_assets', methods=['POST'])
-def update_assets():
-    """Endpoint to manually trigger asset updates"""
-    try:
-        success = update_static_files(config.GITHUB_RAW_BASE, config.GITHUB_FILES)
-        if success:
-            return jsonify({
-                'success': True,
-                'message': 'All assets updated successfully'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'Failed to update some assets'
-            }), 500
     except Exception as e:
         return jsonify({
             'success': False,
@@ -241,7 +222,7 @@ def events():
         # Send a keep-alive comment every 30 seconds
         import time
         last_keepalive = time.time()
-        
+
         while True:
             try:
                 # Check for deletion events (non-blocking with timeout)
@@ -256,7 +237,7 @@ def events():
                         last_keepalive = current_time
             except GeneratorExit:
                 break
-    
+
     return Response(event_stream(), mimetype='text/event-stream')
 
 
@@ -269,10 +250,33 @@ def main():
     # Ensure all required directories exist
     config.ensure_directories()
 
-    # Check and download static files if needed
-    print("Checking static files...")
-    if not download_static_files(config.GITHUB_RAW_BASE, config.GITHUB_FILES):
-        print("Warning: Failed to download some static files")
+    # Copy static and templates directories to data directory
+    # This allows users to modify these files from the host system
+    copy_static_and_templates_to_data_dir(
+        config.STATIC_DIR,
+        config.TEMPLATES_DIR,
+        config.DATA_DIR
+    )
+
+    # Update Flask app to use copied directories
+    app.template_folder = config.get_templates_dir()
+    app.static_folder = config.get_static_dir()
+    
+    # Flask caches the static folder path in its view function at initialization.
+    # We need to update the static view function to use the new folder.
+    # This ensures static files (CSS, JS, etc.) are served from the data directory.
+    if app.static_folder and 'static' in app.view_functions:
+        def updated_static(filename):
+            """
+            Updated static file handler that uses the new static folder.
+            Flask's send_from_directory already handles path traversal security.
+            """
+            return send_from_directory(app.static_folder, filename)
+        
+        app.view_functions['static'] = updated_static
+    
+    print(f"Flask using templates from: {app.template_folder}")
+    print(f"Flask using static files from: {app.static_folder}")
 
     # Clean up any orphaned temporary files from previous runs
     cleanup_temp_directory(config.TEMP_DIR)
