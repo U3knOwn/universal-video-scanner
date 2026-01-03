@@ -123,7 +123,7 @@ DoVi-Detector/
 ### Volumes
 
 - `./media:/media` - Media directory
-- `./data:/app/data` - Persistent database
+- `./data:/data/app/data` - Persistent database
 
 ### Environment Variables
 
@@ -215,7 +215,7 @@ TMDB_API_KEY=your_api_key_here
 - If no TMDB ID is found, the app will search TMDB by the extracted movie name
 
 **Poster Caching:**
-- Poster images are automatically downloaded and cached in `/app/data/posters/`
+- Poster images are automatically downloaded and cached in `/data/app/data/posters/`
 - Cached posters are reused on subsequent page loads, reducing bandwidth and load times
 - Existing posters are migrated to cache on application startup
 
@@ -251,7 +251,7 @@ IMAGE_SOURCE=fanart
 - Only movies are supported (TV shows require TVDB ID which is not currently extracted)
 - No fallback between sources - only the selected source is used
 - Both API keys can be configured, but only the selected source will be used
-- Poster images are automatically cached in `/app/data/posters/`
+- Poster images are automatically cached in `/data/app/data/posters/`
 
 **Without Fanart.tv API Key:**
 - The app will still work normally with TMDB or displaying filenames
