@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 U3knOwn
+# Licensed under the MIT License. See LICENSE file in the project root for full license information.
 """
 Universal Video Scanner - Main Application
 Flask web application for scanning and managing video files

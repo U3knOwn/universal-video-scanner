@@ -1,3 +1,5 @@
+# Copyright (c) 2026 U3knOwn
+# Licensed under the MIT License. See LICENSE file in the project root for full license information.
 """
 Video Scanner Service Module
 Handles video file analysis, HDR detection, and metadata extraction
